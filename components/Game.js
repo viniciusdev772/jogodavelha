@@ -20,6 +20,7 @@ export default function Game() {
   const [words, setWords] = useState([]);
   const [showUsernameInput, setShowUsernameInput] = useState(false);
   const [pendingRoomId, setPendingRoomId] = useState(""); // Novo estado para armazenar o roomId pendente
+  const [wordGuessed, setWordGuessed] = useState(false);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -38,6 +39,13 @@ export default function Game() {
       setTotalPlayers(count);
     });
 
+    socket.on("wordGuessed", (username) => {
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 5000);
+      toast.success(`${username} acertou a palavra!`);
+      setWordGuessed(true);
+    });
+
     if (roomId) {
       socket.emit("joinRoom", { roomId, username }, (success) => {
         if (!success) {
@@ -52,14 +60,6 @@ export default function Game() {
 
       socket.on("update", (state) => {
         setGameState(state);
-        if (
-          state.word
-            .split("")
-            .every((letter) => state.guessedLetters.includes(letter))
-        ) {
-          setShowConfetti(true);
-          setTimeout(() => setShowConfetti(false), 5000);
-        }
       });
 
       socket.on("playerCount", (count) => {
@@ -79,6 +79,7 @@ export default function Game() {
         setShowConfetti(false);
         setCustomWord("");
         setIsCreator(false);
+        setWordGuessed(false);
       });
 
       return () => {
@@ -89,6 +90,7 @@ export default function Game() {
         socket.off("wordsData");
         socket.off("totalPlayers");
         socket.off("roomDestroyed");
+        socket.off("wordGuessed");
       };
     }
   }, [roomId]);
@@ -155,6 +157,15 @@ export default function Game() {
     const roomLink = `${window.location.origin}/?roomId=${roomId}`;
     navigator.clipboard.writeText(roomLink);
     toast.success("Link da sala copiado para a área de transferência!");
+  };
+
+  const startNewGame = () => {
+    setWordGuessed(false);
+    setShowConfetti(false);
+    socket.emit("createRoom", { word: customWord.toUpperCase(), username }, (newRoomId) => {
+      setRoomId(newRoomId);
+      setIsCreator(true);
+    });
   };
 
   if (showUsernameInput) {
@@ -238,7 +249,7 @@ export default function Game() {
       <div className="text-2xl mt-4">
         Sala: <span className="font-mono">{roomId}</span>
       </div>
-      {isCreator && (
+      {isCreator && wordGuessed && (
         <div className="flex flex-col items-center mt-4">
           <button
             onClick={destroyRoom}
@@ -251,6 +262,12 @@ export default function Game() {
             className="bg-blue-500 text-white rounded px-4 py-2"
           >
             Copiar Link da Sala
+          </button>
+          <button
+            onClick={startNewGame}
+            className="bg-green-500 text-white rounded px-4 py-2"
+          >
+            Iniciar Novo Jogo
           </button>
         </div>
       )}

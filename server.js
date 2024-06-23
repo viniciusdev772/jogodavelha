@@ -103,6 +103,14 @@ io.on("connection", (socket) => {
         "playerAction",
         `${username} adivinhou a letra "${letter}"`
       );
+
+      if (
+        gameState.word
+          .split("")
+          .every((letter) => gameState.guessedLetters.includes(letter))
+      ) {
+        io.to(roomId).emit("wordGuessed", username);
+      }
     } else {
       console.error(`gameState is undefined for roomId: ${roomId}`);
     }
