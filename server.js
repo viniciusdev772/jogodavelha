@@ -16,7 +16,7 @@ const io = socketIo(server);
 
 let rooms = {};
 const dbFilePath = path.join(__dirname, "data.json");
-let wordsData = { words: [] };
+let wordsData = { words: [], wins: {} };
 
 if (fs.existsSync(dbFilePath)) {
   const fileData = fs.readFileSync(dbFilePath);
@@ -55,6 +55,15 @@ function updateTotalPlayers() {
 function updatePlayerCount(roomId) {
   const playerCount = Object.keys(rooms[roomId]?.players || {}).length;
   io.to(roomId).emit("playerCount", playerCount);
+}
+
+function updateWins(username) {
+  if (!wordsData.wins[username]) {
+    wordsData.wins[username] = 0;
+  }
+  wordsData.wins[username] += 1;
+  fs.writeFileSync(dbFilePath, JSON.stringify(wordsData));
+  io.emit("updateWins", { username, wins: wordsData.wins[username] });
 }
 
 io.on("connection", (socket) => {
@@ -105,6 +114,7 @@ io.on("connection", (socket) => {
           .every((letter) => gameState.guessedLetters.includes(letter))
       ) {
         io.to(roomId).emit("winner", username);
+        updateWins(username);
         rooms[roomId] = initializeGame(gameState.word);
       }
 
