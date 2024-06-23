@@ -28,16 +28,16 @@ export default function Game() {
       setPendingRoomId(roomIdFromUrl);
       setShowUsernameInput(true);
     }
-  
+
     socket.emit("requestWords");
     socket.on("wordsData", (data) => {
       setWords(data.words);
     });
-  
+
     socket.on("totalPlayers", (count) => {
       setTotalPlayers(count);
     });
-  
+
     if (roomId) {
       socket.emit("joinRoom", { roomId, username }, (success) => {
         if (!success) {
@@ -45,11 +45,11 @@ export default function Game() {
           setRoomId("");
         }
       });
-  
+
       socket.on("init", (state) => {
         setGameState(state);
       });
-  
+
       socket.on("update", (state) => {
         setGameState(state);
         if (
@@ -61,19 +61,19 @@ export default function Game() {
           setTimeout(() => setShowConfetti(false), 5000);
         }
       });
-  
+
       socket.on("playerCount", (count) => {
         setPlayerCount(count);
       });
-  
+
       socket.on("playerAction", (message) => {
         toast.info(message);
       });
-  
+
       socket.on("winner", (winner) => {
         toast.success(`${winner} venceu!`);
       });
-  
+
       socket.on("roomDestroyed", () => {
         alert("A sala foi destruída pelo criador.");
         setRoomId("");
@@ -84,7 +84,7 @@ export default function Game() {
         setCustomWord("");
         setIsCreator(false);
       });
-  
+
       return () => {
         socket.off("init");
         socket.off("update");
@@ -97,7 +97,6 @@ export default function Game() {
       };
     }
   }, [roomId]);
-  
 
   const handleGuess = (letter) => {
     socket.emit("guess", { roomId, letter, username });
@@ -217,14 +216,6 @@ export default function Game() {
         >
           Criar Sala
         </button>
-        <div className="mt-8">
-          <h2 className="text-2xl font-bold mb-4">Palavras Criadas:</h2>
-          <ul className="list-disc">
-            {words.map((word, index) => (
-              <li key={index}>{word}</li>
-            ))}
-          </ul>
-        </div>
       </div>
     );
   }
