@@ -127,6 +127,6 @@ io.on("connection", (socket) => {
 app.prepare().then(() => {
   server.listen(9000, (err) => {
     if (err) throw err;
-    console.log("> Ready on http://localhost:9000");
+    console.log("> Readdy on http://localhost:9000");
   });
 });
