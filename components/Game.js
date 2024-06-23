@@ -4,7 +4,7 @@ import Confetti from "react-confetti";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const socket = io("http://localhost:3000");
+const socket = io("https://jogo.viniciusdev.com.br");
 
 export default function Game() {
   const [gameState, setGameState] = useState(null);
