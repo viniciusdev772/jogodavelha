@@ -18,7 +18,6 @@ export default function Game() {
   const [isCreator, setIsCreator] = useState(false);
   const [totalPlayers, setTotalPlayers] = useState(0);
   const [words, setWords] = useState([]);
-  const [wins, setWins] = useState({});
   const [showUsernameInput, setShowUsernameInput] = useState(false);
   const [pendingRoomId, setPendingRoomId] = useState(""); // Novo estado para armazenar o roomId pendente
 
@@ -33,18 +32,10 @@ export default function Game() {
     socket.emit("requestWords");
     socket.on("wordsData", (data) => {
       setWords(data.words);
-      setWins(data.wins || {});
     });
 
     socket.on("totalPlayers", (count) => {
       setTotalPlayers(count);
-    });
-
-    socket.on("updateWins", (data) => {
-      setWins((prevWins) => ({
-        ...prevWins,
-        [data.username]: data.wins,
-      }));
     });
 
     if (roomId) {
@@ -79,10 +70,6 @@ export default function Game() {
         toast.info(message);
       });
 
-      socket.on("winner", (winner) => {
-        toast.success(`${winner} venceu!`);
-      });
-
       socket.on("roomDestroyed", () => {
         alert("A sala foi destruída pelo criador.");
         setRoomId("");
@@ -99,11 +86,9 @@ export default function Game() {
         socket.off("update");
         socket.off("playerCount");
         socket.off("playerAction");
-        socket.off("winner");
         socket.off("wordsData");
         socket.off("totalPlayers");
         socket.off("roomDestroyed");
-        socket.off("updateWins");
       };
     }
   }, [roomId]);
@@ -249,9 +234,6 @@ export default function Game() {
       <div className="text-2xl mb-4">Erros: {incorrectGuesses}</div>
       <div className="text-2xl mb-4">Jogadores na Sala: {playerCount}</div>
       <div className="text-2xl mb-4">Total de Jogadores: {totalPlayers}</div>
-      <div className="text-2xl mb-4">
-        Vitórias: {username in wins ? wins[username] : 0}
-      </div>
       <VirtualKeyboard onKeyPress={handleGuess} />
       <div className="text-2xl mt-4">
         Sala: <span className="font-mono">{roomId}</span>

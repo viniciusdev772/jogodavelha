@@ -57,15 +57,6 @@ function updatePlayerCount(roomId) {
   io.to(roomId).emit("playerCount", playerCount);
 }
 
-function updateWins(username) {
-  if (!wordsData.wins[username]) {
-    wordsData.wins[username] = 0;
-  }
-  wordsData.wins[username] += 1;
-  fs.writeFileSync(dbFilePath, JSON.stringify(wordsData));
-  io.emit("updateWins", { username, wins: wordsData.wins[username] });
-}
-
 io.on("connection", (socket) => {
   socket.on("requestWords", () => {
     socket.emit("wordsData", wordsData);
@@ -105,17 +96,6 @@ io.on("connection", (socket) => {
         gameState.guessedLetters.push(letter);
       } else {
         gameState.incorrectGuesses += 1;
-      }
-
-      if (
-        gameState.incorrectGuesses >= 6 ||
-        gameState.word
-          .split("")
-          .every((letter) => gameState.guessedLetters.includes(letter))
-      ) {
-        io.to(roomId).emit("winner", username);
-        updateWins(username);
-        rooms[roomId] = initializeGame(gameState.word);
       }
 
       io.to(roomId).emit("update", gameState);
