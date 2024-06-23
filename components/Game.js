@@ -162,10 +162,14 @@ export default function Game() {
   const startNewGame = () => {
     setWordGuessed(false);
     setShowConfetti(false);
-    socket.emit("createRoom", { word: customWord.toUpperCase(), username }, (newRoomId) => {
-      setRoomId(newRoomId);
-      setIsCreator(true);
-    });
+    socket.emit(
+      "createRoom",
+      { word: customWord.toUpperCase(), username },
+      (newRoomId) => {
+        setRoomId(newRoomId);
+        setIsCreator(true);
+      }
+    );
   };
 
   if (showUsernameInput) {
@@ -249,7 +253,7 @@ export default function Game() {
       <div className="text-2xl mt-4">
         Sala: <span className="font-mono">{roomId}</span>
       </div>
-      {isCreator && wordGuessed && (
+      {isCreator && (
         <div className="flex flex-col items-center mt-4">
           <button
             onClick={destroyRoom}
@@ -259,7 +263,7 @@ export default function Game() {
           </button>
           <button
             onClick={copyRoomLink}
-            className="bg-blue-500 text-white rounded px-4 py-2"
+            className="bg-blue-500 text-white rounded px-4 py-2 mb-4"
           >
             Copiar Link da Sala
           </button>
