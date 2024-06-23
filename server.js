@@ -44,6 +44,14 @@ function initializeGame(word) {
   };
 }
 
+function updateTotalPlayers() {
+  const totalPlayers = Object.values(rooms).reduce(
+    (sum, room) => sum + Object.keys(room.players).length,
+    0
+  );
+  io.emit("totalPlayers", totalPlayers);
+}
+
 function updatePlayerCount(roomId) {
   const playerCount = Object.keys(rooms[roomId]?.players || {}).length;
   io.to(roomId).emit("playerCount", playerCount);
@@ -63,6 +71,7 @@ io.on("connection", (socket) => {
     if (typeof callback === "function") callback(roomId);
     io.to(roomId).emit("update", rooms[roomId]);
     updatePlayerCount(roomId);
+    updateTotalPlayers();
   });
 
   socket.on("joinRoom", (data, callback) => {
@@ -73,6 +82,7 @@ io.on("connection", (socket) => {
       if (typeof callback === "function") callback(true);
       io.to(roomId).emit("update", rooms[roomId]);
       updatePlayerCount(roomId);
+      updateTotalPlayers();
     } else {
       if (typeof callback === "function") callback(false);
     }
@@ -114,6 +124,7 @@ io.on("connection", (socket) => {
       io.to(roomId).emit("roomDestroyed");
       io.in(roomId).socketsLeave(roomId);
       delete rooms[roomId];
+      updateTotalPlayers();
     }
   });
 
@@ -136,6 +147,7 @@ io.on("connection", (socket) => {
         delete rooms[roomId];
       }
     });
+    updateTotalPlayers();
   });
 });
 

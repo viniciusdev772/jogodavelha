@@ -237,7 +237,8 @@ export default function Game() {
         Palavra: <span className="font-mono">{displayWord}</span>
       </div>
       <div className="text-2xl mb-4">Erros: {incorrectGuesses}</div>
-      <div className="text-2xl mb-4">Jogadores: {playerCount}</div>
+      <div className="text-2xl mb-4">Jogadores na Sala: {playerCount}</div>
+      <div className="text-2xl mb-4">Total de Jogadores: {totalPlayers}</div>
       <VirtualKeyboard onKeyPress={handleGuess} />
       <div className="text-2xl mt-4">
         Sala: <span className="font-mono">{roomId}</span>
