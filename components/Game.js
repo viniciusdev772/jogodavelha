@@ -3,6 +3,7 @@ import io from "socket.io-client";
 import Confetti from "react-confetti";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import VirtualKeyboard from "../components/VirtualKeyboard";
 
 const socket = io("https://jogo.viniciusdev.com.br");
 
@@ -78,11 +79,8 @@ export default function Game() {
     }
   }, [roomId]);
 
-  const handleGuess = () => {
-    if (guess) {
-      socket.emit("guess", { roomId, letter: guess, username });
-      setGuess("");
-    }
+  const handleGuess = (letter) => {
+    socket.emit("guess", { roomId, letter, username });
   };
 
   const createRoom = () => {
@@ -214,21 +212,7 @@ export default function Game() {
       </div>
       <div className="text-2xl mb-4">Erros: {incorrectGuesses}</div>
       <div className="text-2xl mb-4">Jogadores: {playerCount}</div>
-      <div className="flex">
-        <input
-          type="text"
-          value={guess}
-          onChange={(e) => setGuess(e.target.value)}
-          maxLength={1}
-          className="border border-gray-400 rounded px-4 py-2 mr-2"
-        />
-        <button
-          onClick={handleGuess}
-          className="bg-blue-500 text-white rounded px-4 py-2"
-        >
-          Adivinhar
-        </button>
-      </div>
+      <VirtualKeyboard onKeyPress={handleGuess} />
       <div className="text-2xl mt-4">
         Sala: <span className="font-mono">{roomId}</span>
       </div>
