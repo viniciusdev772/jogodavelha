@@ -1,0 +1,38 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main  # Ou a branch que você deseja monitorar
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v2
+
+      - name: Deploy para VPS via SSH e iniciar com PM2
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          PROJECT_PATH: ${{ secrets.PROJECT_PATH }}
+          REPO_URL: ${{ secrets.REPO_URL }}
+        run: |
+          eval "$(ssh-agent -s)"
+          echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+          ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "
+            export PATH=$PATH:/root/.nvm/versions/node/v22.3.0/bin &&
+            if [ ! -d $PROJECT_PATH ]; then
+              git clone $REPO_URL $PROJECT_PATH
+            fi &&
+            cd $PROJECT_PATH &&
+            git pull &&
+            npm install &&
+            npm run build &&
+            pm2 restart ecosystem.config.js --env production || pm2 start ecosystem.config.js --env production &&
+            pm2 save
+          "
+        shell: bash
