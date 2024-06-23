@@ -88,9 +88,13 @@ export default function Game() {
       setIsCreator(true);
       setShowUsernameInput(true);
     } else {
-      socket.emit("createRoom", { word: customWord, username }, (newRoomId) => {
-        setRoomId(newRoomId);
-      });
+      socket.emit(
+        "createRoom",
+        { word: customWord.toUpperCase(), username },
+        (newRoomId) => {
+          setRoomId(newRoomId);
+        }
+      );
     }
   };
 
