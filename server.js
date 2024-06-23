@@ -120,9 +120,11 @@ io.on("connection", (socket) => {
     const { roomId } = data;
     if (rooms[roomId]) {
       io.to(roomId).emit("roomDestroyed");
-      io.in(roomId).socketsLeave(roomId);
-      delete rooms[roomId];
-      updateTotalPlayers();
+      setTimeout(() => {
+        io.in(roomId).socketsLeave(roomId); // Disconectar todos os sockets da sala
+        delete rooms[roomId];
+        updateTotalPlayers();
+      }, 1000); // Pequeno delay para garantir que a mensagem seja entregue
     }
   });
 
