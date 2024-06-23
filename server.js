@@ -78,27 +78,31 @@ io.on("connection", (socket) => {
   socket.on("guess", (data) => {
     const { roomId, letter, username } = data;
     const gameState = rooms[roomId];
-    if (gameState.word.includes(letter)) {
-      gameState.guessedLetters.push(letter);
+    if (gameState) {
+      if (gameState.word.includes(letter)) {
+        gameState.guessedLetters.push(letter);
+      } else {
+        gameState.incorrectGuesses += 1;
+      }
+
+      if (
+        gameState.incorrectGuesses >= 6 ||
+        gameState.word
+          .split("")
+          .every((letter) => gameState.guessedLetters.includes(letter))
+      ) {
+        io.to(roomId).emit("winner", username);
+        rooms[roomId] = initializeGame(gameState.word);
+      }
+
+      io.to(roomId).emit("update", gameState);
+      io.to(roomId).emit(
+        "playerAction",
+        `${username} adivinhou a letra "${letter}"`
+      );
     } else {
-      gameState.incorrectGuesses += 1;
+      console.error(`gameState is undefined for roomId: ${roomId}`);
     }
-
-    if (
-      gameState.incorrectGuesses >= 6 ||
-      gameState.word
-        .split("")
-        .every((letter) => gameState.guessedLetters.includes(letter))
-    ) {
-      io.to(roomId).emit("winner", username);
-      rooms[roomId] = initializeGame(gameState.word);
-    }
-
-    io.to(roomId).emit("update", gameState);
-    io.to(roomId).emit(
-      "playerAction",
-      `${username} adivinhou a letra "${letter}"`
-    );
   });
 
   socket.on("disconnecting", () => {
@@ -106,11 +110,13 @@ io.on("connection", (socket) => {
       (room) => room !== socket.id
     );
     roomsToUpdate.forEach((roomId) => {
-      delete rooms[roomId].players[socket.id];
-      io.to(roomId).emit(
-        "playerCount",
-        Object.keys(rooms[roomId].players).length
-      );
+      if (rooms[roomId]) {
+        delete rooms[roomId].players[socket.id];
+        io.to(roomId).emit(
+          "playerCount",
+          Object.keys(rooms[roomId].players).length
+        );
+      }
     });
   });
 
@@ -127,6 +133,6 @@ io.on("connection", (socket) => {
 app.prepare().then(() => {
   server.listen(9000, (err) => {
     if (err) throw err;
-    console.log("> Readdy on http://localhost:9000");
+    console.log("> Ready on http://localhost:9000");
   });
 });
