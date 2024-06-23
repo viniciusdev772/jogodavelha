@@ -44,6 +44,11 @@ function initializeGame(word) {
   };
 }
 
+function updatePlayerCount(roomId) {
+  const playerCount = Object.keys(rooms[roomId]?.players || {}).length;
+  io.to(roomId).emit("playerCount", playerCount);
+}
+
 io.on("connection", (socket) => {
   socket.on("requestWords", () => {
     socket.emit("wordsData", wordsData);
@@ -57,10 +62,7 @@ io.on("connection", (socket) => {
     socket.join(roomId);
     if (typeof callback === "function") callback(roomId);
     io.to(roomId).emit("update", rooms[roomId]);
-    io.to(roomId).emit(
-      "playerCount",
-      Object.keys(rooms[roomId].players).length
-    );
+    updatePlayerCount(roomId);
   });
 
   socket.on("joinRoom", (data, callback) => {
@@ -70,10 +72,7 @@ io.on("connection", (socket) => {
       socket.join(roomId);
       if (typeof callback === "function") callback(true);
       io.to(roomId).emit("update", rooms[roomId]);
-      io.to(roomId).emit(
-        "playerCount",
-        Object.keys(rooms[roomId].players).length
-      );
+      updatePlayerCount(roomId);
     } else {
       if (typeof callback === "function") callback(false);
     }
@@ -125,10 +124,7 @@ io.on("connection", (socket) => {
     roomsToUpdate.forEach((roomId) => {
       if (rooms[roomId]) {
         delete rooms[roomId].players[socket.id];
-        io.to(roomId).emit(
-          "playerCount",
-          Object.keys(rooms[roomId].players).length
-        );
+        updatePlayerCount(roomId);
       }
     });
   });
