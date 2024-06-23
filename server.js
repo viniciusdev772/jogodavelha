@@ -45,6 +45,10 @@ function initializeGame(word) {
 }
 
 io.on("connection", (socket) => {
+  socket.on("requestWords", () => {
+    socket.emit("wordsData", wordsData);
+  });
+
   socket.on("createRoom", (data, callback) => {
     const { word, username } = data;
     const roomId = Math.random().toString(36).substr(2, 9);
