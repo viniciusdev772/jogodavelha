@@ -109,6 +109,15 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("destroyRoom", (data) => {
+    const { roomId } = data;
+    if (rooms[roomId]) {
+      io.to(roomId).emit("roomDestroyed");
+      io.in(roomId).socketsLeave(roomId);
+      delete rooms[roomId];
+    }
+  });
+
   socket.on("disconnecting", () => {
     const roomsToUpdate = [...socket.rooms].filter(
       (room) => room !== socket.id

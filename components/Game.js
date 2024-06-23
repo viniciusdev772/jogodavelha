@@ -67,6 +67,17 @@ export default function Game() {
         toast.success(`${winner} venceu!`);
       });
 
+      socket.on("roomDestroyed", () => {
+        alert("A sala foi destruída pelo criador.");
+        setRoomId("");
+        setGameState(null);
+        setGuess("");
+        setPlayerCount(0);
+        setShowConfetti(false);
+        setCustomWord("");
+        setIsCreator(false);
+      });
+
       return () => {
         socket.off("init");
         socket.off("update");
@@ -75,6 +86,7 @@ export default function Game() {
         socket.off("winner");
         socket.off("wordsData");
         socket.off("totalPlayers");
+        socket.off("roomDestroyed");
       };
     }
   }, [roomId]);
@@ -132,6 +144,10 @@ export default function Game() {
     }
   };
 
+  const destroyRoom = () => {
+    socket.emit("destroyRoom", { roomId });
+  };
+
   if (showUsernameInput) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-gray-200 text-black">
@@ -186,14 +202,6 @@ export default function Game() {
         >
           Criar Sala
         </button>
-        <div className="mt-8">
-          <h2 className="text-2xl font-bold mb-4">Palavras Criadas:</h2>
-          <ul className="list-disc">
-            {words.map((word, index) => (
-              <li key={index}>{word}</li>
-            ))}
-          </ul>
-        </div>
       </div>
     );
   }
@@ -220,6 +228,14 @@ export default function Game() {
       <div className="text-2xl mt-4">
         Sala: <span className="font-mono">{roomId}</span>
       </div>
+      {isCreator && (
+        <button
+          onClick={destroyRoom}
+          className="bg-red-500 text-white rounded px-4 py-2 mt-4"
+        >
+          Destruir Sala
+        </button>
+      )}
     </div>
   );
 }
