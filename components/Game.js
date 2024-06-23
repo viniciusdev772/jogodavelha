@@ -22,15 +22,22 @@ export default function Game() {
   const [pendingRoomId, setPendingRoomId] = useState(""); // Novo estado para armazenar o roomId pendente
 
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomIdFromUrl = urlParams.get("roomId");
+    if (roomIdFromUrl) {
+      setPendingRoomId(roomIdFromUrl);
+      setShowUsernameInput(true);
+    }
+  
     socket.emit("requestWords");
     socket.on("wordsData", (data) => {
       setWords(data.words);
     });
-
+  
     socket.on("totalPlayers", (count) => {
       setTotalPlayers(count);
     });
-
+  
     if (roomId) {
       socket.emit("joinRoom", { roomId, username }, (success) => {
         if (!success) {
@@ -38,11 +45,11 @@ export default function Game() {
           setRoomId("");
         }
       });
-
+  
       socket.on("init", (state) => {
         setGameState(state);
       });
-
+  
       socket.on("update", (state) => {
         setGameState(state);
         if (
@@ -54,19 +61,19 @@ export default function Game() {
           setTimeout(() => setShowConfetti(false), 5000);
         }
       });
-
+  
       socket.on("playerCount", (count) => {
         setPlayerCount(count);
       });
-
+  
       socket.on("playerAction", (message) => {
         toast.info(message);
       });
-
+  
       socket.on("winner", (winner) => {
         toast.success(`${winner} venceu!`);
       });
-
+  
       socket.on("roomDestroyed", () => {
         alert("A sala foi destruída pelo criador.");
         setRoomId("");
@@ -77,7 +84,7 @@ export default function Game() {
         setCustomWord("");
         setIsCreator(false);
       });
-
+  
       return () => {
         socket.off("init");
         socket.off("update");
@@ -90,6 +97,7 @@ export default function Game() {
       };
     }
   }, [roomId]);
+  
 
   const handleGuess = (letter) => {
     socket.emit("guess", { roomId, letter, username });
@@ -105,6 +113,7 @@ export default function Game() {
         { word: customWord.toUpperCase(), username },
         (newRoomId) => {
           setRoomId(newRoomId);
+          setIsCreator(true);
         }
       );
     }
@@ -146,6 +155,12 @@ export default function Game() {
 
   const destroyRoom = () => {
     socket.emit("destroyRoom", { roomId });
+  };
+
+  const copyRoomLink = () => {
+    const roomLink = `${window.location.origin}/?roomId=${roomId}`;
+    navigator.clipboard.writeText(roomLink);
+    toast.success("Link da sala copiado para a área de transferência!");
   };
 
   if (showUsernameInput) {
@@ -202,6 +217,14 @@ export default function Game() {
         >
           Criar Sala
         </button>
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold mb-4">Palavras Criadas:</h2>
+          <ul className="list-disc">
+            {words.map((word, index) => (
+              <li key={index}>{word}</li>
+            ))}
+          </ul>
+        </div>
       </div>
     );
   }
@@ -229,12 +252,20 @@ export default function Game() {
         Sala: <span className="font-mono">{roomId}</span>
       </div>
       {isCreator && (
-        <button
-          onClick={destroyRoom}
-          className="bg-red-500 text-white rounded px-4 py-2 mt-4"
-        >
-          Destruir Sala
-        </button>
+        <div className="flex flex-col items-center mt-4">
+          <button
+            onClick={destroyRoom}
+            className="bg-red-500 text-white rounded px-4 py-2 mb-4"
+          >
+            Destruir Sala
+          </button>
+          <button
+            onClick={copyRoomLink}
+            className="bg-blue-500 text-white rounded px-4 py-2"
+          >
+            Copiar Link da Sala
+          </button>
+        </div>
       )}
     </div>
   );
