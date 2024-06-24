@@ -41,7 +41,7 @@ export default function Game() {
 
     socket.on("wordGuessed", (username) => {
       setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 5000);
+      setTimeout(() => setShowConfetti(false), 15000);
       toast.success(`${username} acertou a palavra!`);
       setWordGuessed(true);
     });
