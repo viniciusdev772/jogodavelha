@@ -19,7 +19,7 @@ export default function Game() {
   const [totalPlayers, setTotalPlayers] = useState(0);
   const [words, setWords] = useState([]);
   const [showUsernameInput, setShowUsernameInput] = useState(false);
-  const [pendingRoomId, setPendingRoomId] = useState(""); // Novo estado para armazenar o roomId pendente
+  const [pendingRoomId, setPendingRoomId] = useState(""); 
   const [wordGuessed, setWordGuessed] = useState(false);
 
   useEffect(() => {
@@ -104,6 +104,10 @@ export default function Game() {
       setIsCreator(true);
       setShowUsernameInput(true);
     } else {
+      if (customWord.includes(" ")) {
+        toast.error("A palavra não pode conter espaços!");
+        return;
+      }
       socket.emit(
         "createRoom",
         { word: customWord.toUpperCase(), username },
@@ -174,7 +178,7 @@ export default function Game() {
 
   if (showUsernameInput) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-gray-200 text-black">
+      <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white">
         <ToastContainer />
         <h1 className="text-4xl font-bold mb-8">Jogo da Forca</h1>
         <input
@@ -186,7 +190,7 @@ export default function Game() {
         />
         <button
           onClick={handleUsernameSubmit}
-          className="bg-blue-500 text-white rounded px-4 py-2 mb-4"
+          className="bg-blue-600 hover:bg-blue-700 transition duration-200 text-white rounded px-4 py-2 mb-4"
         >
           Confirmar Nome de Usuário
         </button>
@@ -196,7 +200,7 @@ export default function Game() {
 
   if (!roomId && !showUsernameInput) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-gray-200 text-black">
+      <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white">
         <ToastContainer />
         <h1 className="text-4xl font-bold mb-8">Jogo da Forca</h1>
         <div className="mb-4">Total de Jogadores: {totalPlayers}</div>
@@ -209,7 +213,7 @@ export default function Game() {
         />
         <button
           onClick={joinRoom}
-          className="bg-blue-500 text-white rounded px-4 py-2 mb-4"
+          className="bg-blue-600 hover:bg-blue-700 transition duration-200 text-white rounded px-4 py-2 mb-4"
         >
           Entrar na Sala
         </button>
@@ -222,7 +226,7 @@ export default function Game() {
         />
         <button
           onClick={createRoom}
-          className="bg-blue-500 text-white rounded px-4 py-2 mb-4"
+          className="bg-blue-600 hover:bg-blue-700 transition duration-200 text-white rounded px-4 py-2 mb-4"
         >
           Criar Sala
         </button>
@@ -239,7 +243,7 @@ export default function Game() {
     .join(" ");
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-gray-200 text-black">
+    <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white">
       <ToastContainer />
       {showConfetti && <Confetti />}
       <h1 className="text-4xl font-bold mb-8">Jogo da Forca</h1>
@@ -257,19 +261,19 @@ export default function Game() {
         <div className="flex flex-col items-center mt-4">
           <button
             onClick={destroyRoom}
-            className="bg-red-500 text-white rounded px-4 py-2 mb-4"
+            className="bg-red-600 hover:bg-red-700 transition duration-200 text-white rounded px-4 py-2 mb-4"
           >
             Destruir Sala
           </button>
           <button
             onClick={copyRoomLink}
-            className="bg-blue-500 text-white rounded px-4 py-2 mb-4"
+            className="bg-blue-600 hover:bg-blue-700 transition duration-200 text-white rounded px-4 py-2 mb-4"
           >
             Copiar Link da Sala
           </button>
           <button
             onClick={startNewGame}
-            className="bg-green-500 text-white rounded px-4 py-2"
+            className="bg-green-600 hover:bg-green-700 transition duration-200 text-white rounded px-4 py-2"
           >
             Iniciar Novo Jogo
           </button>
