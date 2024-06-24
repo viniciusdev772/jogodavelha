@@ -26,7 +26,14 @@ if (fs.existsSync(dbFilePath)) {
 }
 
 function chooseRandomWord() {
-  const words = ["apple", "banana", "cherry", "date", "elderberry"];
+  const words = [
+    "ABACAXI", "ACAI", "BANANA", "CACAU", "CAJU", "CARAMBOLA", "COCO", "GOIABA",
+    "JACA", "JAMBO", "LARANJA", "MANGA", "MARACUJA", "MURICI", "PITANGA", "SAPOTI",
+    "TAMARINDO", "UMBU", "URUCUM", "CASTANHA", "GUARANA", "ACEROLA", "BACURI", "BURITI",
+    "CUPUACU", "PEQUI", "PITOMBA", "SAPUCAIA", "TAPEREBA", "SERIGUELA", "GRAVIOLA",
+    "SIRIGADO", "PIRARUCU", "TUCUPI", "TACACA", "CHIMARRAO", "FEIJOADA", "PAODEQUEIJO",
+    "BRIGADEIRO", "PAMONHA"
+  ];
   const randomIndex = Math.floor(Math.random() * words.length);
   return words[randomIndex];
 }
