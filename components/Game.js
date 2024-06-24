@@ -19,7 +19,7 @@ export default function Game() {
   const [totalPlayers, setTotalPlayers] = useState(0);
   const [words, setWords] = useState([]);
   const [showUsernameInput, setShowUsernameInput] = useState(false);
-  const [pendingRoomId, setPendingRoomId] = useState(""); 
+  const [pendingRoomId, setPendingRoomId] = useState("");
   const [wordGuessed, setWordGuessed] = useState(false);
 
   useEffect(() => {
@@ -186,7 +186,7 @@ export default function Game() {
           placeholder="Nome de Usuário"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          className="border border-gray-400 rounded px-4 py-2 mb-4"
+          className="border border-gray-400 rounded px-4 py-2 mb-4 text-black bg-white"
         />
         <button
           onClick={handleUsernameSubmit}
@@ -209,7 +209,7 @@ export default function Game() {
           placeholder="ID da Sala"
           value={pendingRoomId}
           onChange={(e) => setPendingRoomId(e.target.value)}
-          className="border border-gray-400 rounded px-4 py-2 mb-4"
+          className="border border-gray-400 rounded px-4 py-2 mb-4 text-black bg-white"
         />
         <button
           onClick={joinRoom}
@@ -222,7 +222,7 @@ export default function Game() {
           placeholder="Digite a palavra para a sala"
           value={customWord}
           onChange={(e) => setCustomWord(e.target.value)}
-          className="border border-gray-400 rounded px-4 py-2 mb-4"
+          className="border border-gray-400 rounded px-4 py-2 mb-4 text-black bg-white"
         />
         <button
           onClick={createRoom}
