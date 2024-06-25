@@ -49,7 +49,7 @@ export default function Game() {
     if (roomId) {
       socket.emit("joinRoom", { roomId, username }, (success) => {
         if (!success) {
-          alert("Room not found");
+          alert("a sala não foi encontrada. caso tenha certeza que ela existe recarregar a página e tentar novamente");
           setRoomId("");
         }
       });
