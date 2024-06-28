@@ -21,7 +21,6 @@ export default function Game() {
   const [showUsernameInput, setShowUsernameInput] = useState(false);
   const [pendingRoomId, setPendingRoomId] = useState("");
   const [wordGuessed, setWordGuessed] = useState(false);
-  const [guessedLetters, setGuessedLetters] = useState([]); // Novo estado
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -99,10 +98,7 @@ export default function Game() {
   }, [roomId]);
 
   const handleGuess = (letter) => {
-    if (!guessedLetters.includes(letter)) {
-      setGuessedLetters([...guessedLetters, letter]); // Adiciona a letra adivinhada
-      socket.emit("guess", { roomId, letter, username });
-    }
+    socket.emit("guess", { roomId, letter, username });
   };
 
   const createRoom = () => {
@@ -242,7 +238,7 @@ export default function Game() {
 
   if (!gameState) return <div className="text-center text-2xl">Loading...</div>;
 
-  const { word, incorrectGuesses } = gameState;
+  const { word, guessedLetters, incorrectGuesses } = gameState;
   const displayWord = word
     .split("")
     .map((letter) => (guessedLetters.includes(letter) ? letter : "_"))
@@ -259,15 +255,7 @@ export default function Game() {
       <div className="text-2xl mb-4">Erros: {incorrectGuesses}</div>
       <div className="text-2xl mb-4">Jogadores na Sala: {playerCount}</div>
       <div className="text-2xl mb-4">Total de Jogadores: {totalPlayers}</div>
-      <div className="text-2xl mb-4">
-        Letras Adivinhadas: {guessedLetters.join(", ")}
-      </div>{" "}
-      {/* Exibir letras adivinhadas */}
-      <VirtualKeyboard
-        onKeyPress={handleGuess}
-        guessedLetters={guessedLetters}
-      />{" "}
-      {/* Passar letras adivinhadas */}
+      <VirtualKeyboard onKeyPress={handleGuess} />
       <div className="text-2xl mt-4">
         Sala: <span className="font-mono">{roomId}</span>
       </div>
