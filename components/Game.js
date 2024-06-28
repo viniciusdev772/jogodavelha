@@ -21,6 +21,7 @@ export default function Game() {
   const [showUsernameInput, setShowUsernameInput] = useState(false);
   const [pendingRoomId, setPendingRoomId] = useState("");
   const [wordGuessed, setWordGuessed] = useState(false);
+  const [guessedLetters, setGuessedLetters] = useState([]); // Novo estado
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -53,192 +54,23 @@ export default function Game() {
             "a sala não foi encontrada. caso tenha certeza que ela existe recarregar a página e tentar novamente"
           );
           setRoomId("");
+          setPendingRoomId("");
+          setShowUsernameInput(true);
         }
       });
-
-      socket.on("init", (state) => {
-        setGameState(state);
-      });
-
-      socket.on("update", (state) => {
-        setGameState(state);
-      });
-
-      socket.on("playerCount", (count) => {
-        setPlayerCount(count);
-      });
-
-      socket.on("playerAction", (message) => {
-        toast.info(message);
-      });
-
-      socket.on("roomDestroyed", () => {
-        alert("A sala foi destruída pelo criador.");
-        setRoomId("");
-        setGameState(null);
-        setGuess("");
-        setPlayerCount(0);
-        setShowConfetti(false);
-        setCustomWord("");
-        setIsCreator(false);
-        setWordGuessed(false);
-      });
-
-      return () => {
-        socket.off("init");
-        socket.off("update");
-        socket.off("playerCount");
-        socket.off("playerAction");
-        socket.off("wordsData");
-        socket.off("totalPlayers");
-        socket.off("roomDestroyed");
-        socket.off("wordGuessed");
-      };
     }
-  }, [roomId]);
+  }, [roomId, username]);
 
   const handleGuess = (letter) => {
-    socket.emit("guess", { roomId, letter, username });
-  };
-
-  const createRoom = () => {
-    if (!username) {
-      setIsCreator(true);
-      setShowUsernameInput(true);
-    } else {
-      if (customWord.includes(" ")) {
-        toast.error("A palavra não pode conter espaços!");
-        return;
-      }
-      socket.emit(
-        "createRoom",
-        { word: customWord.toUpperCase(), username },
-        (newRoomId) => {
-          setRoomId(newRoomId);
-          setIsCreator(true);
-        }
-      );
+    if (!guessedLetters.includes(letter)) {
+      setGuessedLetters([...guessedLetters, letter]); // Adiciona a letra adivinhada
+      socket.emit("guess", { roomId, letter });
     }
   };
-
-  const joinRoom = () => {
-    if (!username) {
-      setIsCreator(false);
-      setShowUsernameInput(true);
-    } else {
-      socket.emit("joinRoom", { roomId, username }, (success) => {
-        if (!success) {
-          alert("Room not found");
-          setRoomId("");
-        }
-      });
-    }
-  };
-
-  const handleUsernameSubmit = () => {
-    setShowUsernameInput(false);
-    if (isCreator) {
-      createRoom();
-    } else {
-      socket.emit(
-        "joinRoom",
-        { roomId: pendingRoomId, username },
-        (success) => {
-          if (!success) {
-            alert("Room not found");
-            setPendingRoomId("");
-          } else {
-            setRoomId(pendingRoomId);
-          }
-        }
-      );
-    }
-  };
-
-  const destroyRoom = () => {
-    socket.emit("destroyRoom", { roomId });
-  };
-
-  const copyRoomLink = () => {
-    const roomLink = `${window.location.origin}/?roomId=${roomId}`;
-    navigator.clipboard.writeText(roomLink);
-    toast.success("Link da sala copiado para a área de transferência!");
-  };
-
-  const startNewGame = () => {
-    setWordGuessed(false);
-    setShowConfetti(false);
-    socket.emit(
-      "createRoom",
-      { word: customWord.toUpperCase(), username },
-      (newRoomId) => {
-        setRoomId(newRoomId);
-        setIsCreator(true);
-      }
-    );
-  };
-
-  if (showUsernameInput) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white">
-        <ToastContainer />
-        <h1 className="text-4xl font-bold mb-8">Jogo da Forca</h1>
-        <input
-          type="text"
-          placeholder="Nome de Usuário"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="border border-gray-400 rounded px-4 py-2 mb-4 text-black bg-white"
-        />
-        <button
-          onClick={handleUsernameSubmit}
-          className="bg-blue-600 hover:bg-blue-700 transition duration-200 text-white rounded px-4 py-2 mb-4"
-        >
-          Confirmar Nome de Usuário
-        </button>
-      </div>
-    );
-  }
-
-  if (!roomId && !showUsernameInput) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white">
-        <ToastContainer />
-        <h1 className="text-4xl font-bold mb-8">Jogo da Forca</h1>
-        <div className="mb-4">Total de Jogadores: {totalPlayers}</div>
-        <input
-          type="text"
-          placeholder="ID da Sala"
-          value={pendingRoomId}
-          onChange={(e) => setPendingRoomId(e.target.value)}
-          className="border border-gray-400 rounded px-4 py-2 mb-4 text-black bg-white"
-        />
-        <button
-          onClick={joinRoom}
-          className="bg-blue-600 hover:bg-blue-700 transition duration-200 text-white rounded px-4 py-2 mb-4"
-        >
-          Entrar na Sala
-        </button>
-        <input
-          type="text"
-          placeholder="Digite a palavra para a sala"
-          value={customWord}
-          onChange={(e) => setCustomWord(e.target.value)}
-          className="border border-gray-400 rounded px-4 py-2 mb-4 text-black bg-white"
-        />
-        <button
-          onClick={createRoom}
-          className="bg-blue-600 hover:bg-blue-700 transition duration-200 text-white rounded px-4 py-2 mb-4"
-        >
-          Criar Sala
-        </button>
-      </div>
-    );
-  }
 
   if (!gameState) return <div className="text-center text-2xl">Loading...</div>;
 
-  const { word, guessedLetters, incorrectGuesses } = gameState;
+  const { word, incorrectGuesses } = gameState;
   const displayWord = word
     .split("")
     .map((letter) => (guessedLetters.includes(letter) ? letter : "_"))
@@ -255,7 +87,15 @@ export default function Game() {
       <div className="text-2xl mb-4">Erros: {incorrectGuesses}</div>
       <div className="text-2xl mb-4">Jogadores na Sala: {playerCount}</div>
       <div className="text-2xl mb-4">Total de Jogadores: {totalPlayers}</div>
-      <VirtualKeyboard onKeyPress={handleGuess} />
+      <div className="text-2xl mb-4">
+        Letras Adivinhadas: {guessedLetters.join(", ")}
+      </div>{" "}
+      {/* Exibir letras adivinhadas */}
+      <VirtualKeyboard
+        onKeyPress={handleGuess}
+        guessedLetters={guessedLetters}
+      />{" "}
+      {/* Passar letras adivinhadas */}
       <div className="text-2xl mt-4">
         Sala: <span className="font-mono">{roomId}</span>
       </div>
