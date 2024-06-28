@@ -243,7 +243,6 @@ export default function Game() {
         onKeyPress={handleGuess}
         guessedLetters={guessedLetters}
       />
-      
       <div className="text-2xl mt-4">
         Sala: <span className="font-mono">{roomId}</span>
       </div>

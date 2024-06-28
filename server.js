@@ -99,6 +99,14 @@ function updatePlayerCount(roomId) {
   io.to(roomId).emit("playerCount", playerCount);
 }
 
+function cleanUpEmptyRooms() {
+  Object.keys(rooms).forEach((roomId) => {
+    if (Object.keys(rooms[roomId].players).length === 0) {
+      delete rooms[roomId];
+    }
+  });
+}
+
 io.on("connection", (socket) => {
   socket.on("requestWords", () => {
     socket.emit("wordsData", wordsData);
@@ -183,12 +191,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    // Clean up empty rooms
-    Object.keys(rooms).forEach((roomId) => {
-      if (io.sockets.adapter.rooms.get(roomId) === undefined) {
-        delete rooms[roomId];
-      }
-    });
+    cleanUpEmptyRooms();
     updateTotalPlayers();
   });
 });
