@@ -98,6 +98,18 @@ export default function Game() {
     }
   };
 
+  const handleRoomDestroyed = () => {
+    alert("A sala foi destruída pelo criador.");
+    setRoomId("");
+    setGameState(null);
+    setGuess("");
+    setPlayerCount(0);
+    setShowConfetti(false);
+    setCustomWord("");
+    setIsCreator(false);
+    setWordGuessed(false);
+  };
+
   const handleGuess = (letter) => {
     socket.emit("guess", { roomId, letter, username });
   };
