@@ -25,52 +25,17 @@ if (fs.existsSync(dbFilePath)) {
   fs.writeFileSync(dbFilePath, JSON.stringify(wordsData));
 }
 
-const wordList = [
-  "ABACAXI",
-  "ACAI",
-  "BANANA",
-  "CACAU",
-  "CAJU",
-  "CARAMBOLA",
-  "COCO",
-  "GOIABA",
-  "JACA",
-  "JAMBO",
-  "LARANJA",
-  "MANGA",
-  "MARACUJA",
-  "MURICI",
-  "PITANGA",
-  "SAPOTI",
-  "TAMARINDO",
-  "UMBU",
-  "URUCUM",
-  "CASTANHA",
-  "GUARANA",
-  "ACEROLA",
-  "BACURI",
-  "BURITI",
-  "CUPUACU",
-  "PEQUI",
-  "PITOMBA",
-  "SAPUCAIA",
-  "TAPEREBA",
-  "SERIGUELA",
-  "GRAVIOLA",
-  "SIRIGADO",
-  "PIRARUCU",
-  "TUCUPI",
-  "TACACA",
-  "CHIMARRAO",
-  "FEIJOADA",
-  "PAODEQUEIJO",
-  "BRIGADEIRO",
-  "PAMONHA",
-];
-
 function chooseRandomWord() {
-  const randomIndex = Math.floor(Math.random() * wordList.length);
-  return wordList[randomIndex];
+  const words = [
+    "ABACAXI", "ACAI", "BANANA", "CACAU", "CAJU", "CARAMBOLA", "COCO", "GOIABA",
+    "JACA", "JAMBO", "LARANJA", "MANGA", "MARACUJA", "MURICI", "PITANGA", "SAPOTI",
+    "TAMARINDO", "UMBU", "URUCUM", "CASTANHA", "GUARANA", "ACEROLA", "BACURI", "BURITI",
+    "CUPUACU", "PEQUI", "PITOMBA", "SAPUCAIA", "TAPEREBA", "SERIGUELA", "GRAVIOLA",
+    "SIRIGADO", "PIRARUCU", "TUCUPI", "TACACA", "CHIMARRAO", "FEIJOADA", "PAODEQUEIJO",
+    "BRIGADEIRO", "PAMONHA"
+  ];
+  const randomIndex = Math.floor(Math.random() * words.length);
+  return words[randomIndex];
 }
 
 function initializeGame(word) {
@@ -97,14 +62,6 @@ function updateTotalPlayers() {
 function updatePlayerCount(roomId) {
   const playerCount = Object.keys(rooms[roomId]?.players || {}).length;
   io.to(roomId).emit("playerCount", playerCount);
-}
-
-function cleanUpEmptyRooms() {
-  Object.keys(rooms).forEach((roomId) => {
-    if (Object.keys(rooms[roomId].players).length === 0) {
-      delete rooms[roomId];
-    }
-  });
 }
 
 io.on("connection", (socket) => {
@@ -191,7 +148,12 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    cleanUpEmptyRooms();
+    // Clean up empty rooms
+    Object.keys(rooms).forEach((roomId) => {
+      if (io.sockets.adapter.rooms.get(roomId) === undefined) {
+        delete rooms[roomId];
+      }
+    });
     updateTotalPlayers();
   });
 });
