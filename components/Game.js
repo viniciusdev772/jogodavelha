@@ -111,7 +111,14 @@ export default function Game() {
   };
 
   const handleGuess = (letter) => {
-    socket.emit("guess", { roomId, letter, username });
+    if (
+      !gameState.guessedLetters.includes(letter) &&
+      !gameState.word.includes(letter)
+    ) {
+      socket.emit("guess", { roomId, letter, username });
+    } else {
+      toast.error("Você já tentou essa letra!");
+    }
   };
 
   const createRoom = () => {
@@ -141,7 +148,11 @@ export default function Game() {
       setIsCreator(false);
       setShowUsernameInput(true);
     } else {
-      socket.emit("joinRoom", { roomId, username }, handleJoinRoom);
+      socket.emit(
+        "joinRoom",
+        { roomId: pendingRoomId, username },
+        handleJoinRoom
+      );
     }
   };
 
