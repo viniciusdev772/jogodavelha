@@ -4,7 +4,6 @@ import Confetti from "react-confetti";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import VirtualKeyboard from "../components/VirtualKeyboard";
-import HangmanDrawing from "../components/HangmanDrawing";
 
 const socket = io("https://jogo.viniciusdev.com.br");
 
@@ -111,10 +110,7 @@ export default function Game() {
   };
 
   const handleGuess = (letter) => {
-    if (
-      !gameState.guessedLetters.includes(letter) &&
-      !gameState.word.includes(letter)
-    ) {
+    if (gameState && !gameState.guessedLetters.includes(letter)) {
       socket.emit("guess", { roomId, letter, username });
     } else {
       toast.error("Você já tentou essa letra!");
