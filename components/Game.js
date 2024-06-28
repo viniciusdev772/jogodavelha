@@ -4,8 +4,28 @@ import Confetti from "react-confetti";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import VirtualKeyboard from "../components/VirtualKeyboard";
+import HangmanDrawing from "../components/HangmanDrawing";
 
 const socket = io("https://jogo.viniciusdev.com.br");
+
+const TextInput = ({ value, onChange, placeholder }) => (
+  <input
+    type="text"
+    placeholder={placeholder}
+    value={value}
+    onChange={onChange}
+    className="border border-gray-400 rounded px-4 py-2 mb-4 text-black bg-white"
+  />
+);
+
+const Button = ({ onClick, children, className = "" }) => (
+  <button
+    onClick={onClick}
+    className={`bg-blue-600 hover:bg-blue-700 transition duration-200 text-white rounded px-4 py-2 mb-4 ${className}`}
+  >
+    {children}
+  </button>
+);
 
 export default function Game() {
   const [gameState, setGameState] = useState(null);
@@ -31,69 +51,52 @@ export default function Game() {
     }
 
     socket.emit("requestWords");
-    socket.on("wordsData", (data) => {
-      setWords(data.words);
-    });
+    socket.on("wordsData", (data) => setWords(data.words));
+    socket.on("totalPlayers", (count) => setTotalPlayers(count));
+    socket.on("wordGuessed", handleWordGuessed);
 
-    socket.on("totalPlayers", (count) => {
-      setTotalPlayers(count);
-    });
+    return () => {
+      socket.off("wordsData");
+      socket.off("totalPlayers");
+      socket.off("wordGuessed");
+    };
+  }, []);
 
-    socket.on("wordGuessed", (username) => {
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 15000);
-      toast.success(`${username} acertou a palavra!`);
-      setWordGuessed(true);
-    });
-
+  useEffect(() => {
     if (roomId) {
-      socket.emit("joinRoom", { roomId, username }, (success) => {
-        if (!success) {
-          alert("a sala não foi encontrada. caso tenha certeza que ela existe recarregar a página e tentar novamente");
-          setRoomId("");
-        }
-      });
+      socket.emit("joinRoom", { roomId, username }, handleJoinRoom);
 
-      socket.on("init", (state) => {
-        setGameState(state);
-      });
-
-      socket.on("update", (state) => {
-        setGameState(state);
-      });
-
-      socket.on("playerCount", (count) => {
-        setPlayerCount(count);
-      });
-
-      socket.on("playerAction", (message) => {
-        toast.info(message);
-      });
-
-      socket.on("roomDestroyed", () => {
-        alert("A sala foi destruída pelo criador.");
-        setRoomId("");
-        setGameState(null);
-        setGuess("");
-        setPlayerCount(0);
-        setShowConfetti(false);
-        setCustomWord("");
-        setIsCreator(false);
-        setWordGuessed(false);
-      });
+      socket.on("init", (state) => setGameState(state));
+      socket.on("update", (state) => setGameState(state));
+      socket.on("playerCount", (count) => setPlayerCount(count));
+      socket.on("playerAction", (message) => toast.info(message));
+      socket.on("roomDestroyed", handleRoomDestroyed);
 
       return () => {
         socket.off("init");
         socket.off("update");
         socket.off("playerCount");
         socket.off("playerAction");
-        socket.off("wordsData");
-        socket.off("totalPlayers");
         socket.off("roomDestroyed");
-        socket.off("wordGuessed");
       };
     }
   }, [roomId]);
+
+  const handleWordGuessed = (username) => {
+    setShowConfetti(true);
+    setTimeout(() => setShowConfetti(false), 15000);
+    toast.success(`${username} acertou a palavra!`);
+    setWordGuessed(true);
+  };
+
+  const handleJoinRoom = (success) => {
+    if (!success) {
+      alert(
+        "A sala não foi encontrada. Caso tenha certeza que ela existe, recarregue a página e tente novamente."
+      );
+      setRoomId("");
+    }
+  };
 
   const handleGuess = (letter) => {
     socket.emit("guess", { roomId, letter, username });
@@ -111,12 +114,14 @@ export default function Game() {
       socket.emit(
         "createRoom",
         { word: customWord.toUpperCase(), username },
-        (newRoomId) => {
-          setRoomId(newRoomId);
-          setIsCreator(true);
-        }
+        handleCreateRoom
       );
     }
+  };
+
+  const handleCreateRoom = (newRoomId) => {
+    setRoomId(newRoomId);
+    setIsCreator(true);
   };
 
   const joinRoom = () => {
@@ -124,12 +129,7 @@ export default function Game() {
       setIsCreator(false);
       setShowUsernameInput(true);
     } else {
-      socket.emit("joinRoom", { roomId, username }, (success) => {
-        if (!success) {
-          alert("Room not found");
-          setRoomId("");
-        }
-      });
+      socket.emit("joinRoom", { roomId, username }, handleJoinRoom);
     }
   };
 
@@ -141,14 +141,7 @@ export default function Game() {
       socket.emit(
         "joinRoom",
         { roomId: pendingRoomId, username },
-        (success) => {
-          if (!success) {
-            alert("Room not found");
-            setPendingRoomId("");
-          } else {
-            setRoomId(pendingRoomId);
-          }
-        }
+        handleJoinRoom
       );
     }
   };
@@ -169,10 +162,7 @@ export default function Game() {
     socket.emit(
       "createRoom",
       { word: customWord.toUpperCase(), username },
-      (newRoomId) => {
-        setRoomId(newRoomId);
-        setIsCreator(true);
-      }
+      handleCreateRoom
     );
   };
 
@@ -181,19 +171,14 @@ export default function Game() {
       <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white">
         <ToastContainer />
         <h1 className="text-4xl font-bold mb-8">Jogo da Forca</h1>
-        <input
-          type="text"
-          placeholder="Nome de Usuário"
+        <TextInput
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          className="border border-gray-400 rounded px-4 py-2 mb-4 text-black bg-white"
+          placeholder="Nome de Usuário"
         />
-        <button
-          onClick={handleUsernameSubmit}
-          className="bg-blue-600 hover:bg-blue-700 transition duration-200 text-white rounded px-4 py-2 mb-4"
-        >
+        <Button onClick={handleUsernameSubmit}>
           Confirmar Nome de Usuário
-        </button>
+        </Button>
       </div>
     );
   }
@@ -204,32 +189,18 @@ export default function Game() {
         <ToastContainer />
         <h1 className="text-4xl font-bold mb-8">Jogo da Forca</h1>
         <div className="mb-4">Total de Jogadores: {totalPlayers}</div>
-        <input
-          type="text"
-          placeholder="ID da Sala"
+        <TextInput
           value={pendingRoomId}
           onChange={(e) => setPendingRoomId(e.target.value)}
-          className="border border-gray-400 rounded px-4 py-2 mb-4 text-black bg-white"
+          placeholder="ID da Sala"
         />
-        <button
-          onClick={joinRoom}
-          className="bg-blue-600 hover:bg-blue-700 transition duration-200 text-white rounded px-4 py-2 mb-4"
-        >
-          Entrar na Sala
-        </button>
-        <input
-          type="text"
-          placeholder="Digite a palavra para a sala"
+        <Button onClick={joinRoom}>Entrar na Sala</Button>
+        <TextInput
           value={customWord}
           onChange={(e) => setCustomWord(e.target.value)}
-          className="border border-gray-400 rounded px-4 py-2 mb-4 text-black bg-white"
+          placeholder="Digite a palavra para a sala"
         />
-        <button
-          onClick={createRoom}
-          className="bg-blue-600 hover:bg-blue-700 transition duration-200 text-white rounded px-4 py-2 mb-4"
-        >
-          Criar Sala
-        </button>
+        <Button onClick={createRoom}>Criar Sala</Button>
       </div>
     );
   }
@@ -251,32 +222,28 @@ export default function Game() {
         Palavra: <span className="font-mono">{displayWord}</span>
       </div>
       <div className="text-2xl mb-4">Erros: {incorrectGuesses}</div>
+      <div className="text-2xl mb-4">
+        Letras Digitadas: {guessedLetters.join(", ")}
+      </div>
       <div className="text-2xl mb-4">Jogadores na Sala: {playerCount}</div>
       <div className="text-2xl mb-4">Total de Jogadores: {totalPlayers}</div>
-      <VirtualKeyboard onKeyPress={handleGuess} />
+      <VirtualKeyboard
+        onKeyPress={handleGuess}
+        guessedLetters={guessedLetters}
+      />
+      <HangmanDrawing incorrectGuesses={incorrectGuesses} />
       <div className="text-2xl mt-4">
         Sala: <span className="font-mono">{roomId}</span>
       </div>
       {isCreator && (
         <div className="flex flex-col items-center mt-4">
-          <button
-            onClick={destroyRoom}
-            className="bg-red-600 hover:bg-red-700 transition duration-200 text-white rounded px-4 py-2 mb-4"
-          >
+          <Button onClick={destroyRoom} className="bg-red-600">
             Destruir Sala
-          </button>
-          <button
-            onClick={copyRoomLink}
-            className="bg-blue-600 hover:bg-blue-700 transition duration-200 text-white rounded px-4 py-2 mb-4"
-          >
-            Copiar Link da Sala
-          </button>
-          <button
-            onClick={startNewGame}
-            className="bg-green-600 hover:bg-green-700 transition duration-200 text-white rounded px-4 py-2"
-          >
+          </Button>
+          <Button onClick={copyRoomLink}>Copiar Link da Sala</Button>
+          <Button onClick={startNewGame} className="bg-green-600">
             Iniciar Novo Jogo
-          </button>
+          </Button>
         </div>
       )}
     </div>
