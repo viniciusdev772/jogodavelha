@@ -192,7 +192,12 @@ export default function Game() {
   const handleLogin = (data) => {
     socket.emit("login", data, (response) => {
       if (response.success) {
-        setUser({ username: data.username, token: response.token });
+        setUser({
+          username: data.username,
+          token: response.token,
+          level: response.level,
+          xp: response.xp,
+        });
         setShowUsernameInput(false);
       } else {
         toast.error(response.message);
