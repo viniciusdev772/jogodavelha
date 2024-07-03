@@ -5,14 +5,16 @@ const fs = require("fs");
 const path = require("path");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
+const express = require("express");
 
 const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
-const server = createServer((req, res) => {
-  handle(req, res);
-});
+const server = express();
+server.use(cookieParser());
+server.use((req, res) => handle(req, res));
 
 const io = socketIo(server);
 
@@ -95,6 +97,7 @@ io.on("connection", (socket) => {
     const user = usersData[username];
     if (user && (await bcrypt.compare(password, user.password))) {
       const token = jwt.sign({ username }, "secretKey", { expiresIn: "1h" });
+      socket.emit("setCookie", { token });
       callback({ success: true, token, level: user.level, xp: user.xp });
     } else {
       callback({ success: false, message: "Invalid credentials" });
@@ -144,13 +147,19 @@ io.on("connection", (socket) => {
       );
       io.to(roomId).emit("guessedLetters", gameState.guessedLetters);
 
+      // Verifica se todas as letras foram adivinhadas
       if (
         gameState.word
           .split("")
           .every((l) => gameState.guessedLetters.includes(l))
       ) {
         io.to(roomId).emit("wordGuessed", username);
-        addXp(username, 10); // Add XP when the word is guessed
+        addXp(username, 10); // Aumenta o XP quando a palavra é adivinhada
+        const updatedUser = usersData[username];
+        io.to(socket.id).emit("updateUser", {
+          level: updatedUser.level,
+          xp: updatedUser.xp,
+        });
       }
     } else {
       console.error(`gameState is undefined for roomId: ${roomId}`);

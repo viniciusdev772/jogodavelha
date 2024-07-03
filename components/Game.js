@@ -3,6 +3,7 @@ import io from "socket.io-client";
 import Confetti from "react-confetti";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Cookies from "js-cookie";
 import VirtualKeyboard from "../components/VirtualKeyboard";
 import LoginForm from "../components/LoginForm";
 import RegisterForm from "../components/RegisterForm";
@@ -22,18 +23,28 @@ export default function Game() {
   const [isCreator, setIsCreator] = useState(false);
   const [totalPlayers, setTotalPlayers] = useState(0);
   const [words, setWords] = useState([]);
-  const [showUsernameInput, setShowUsernameInput] = useState(false);
   const [pendingRoomId, setPendingRoomId] = useState("");
   const [wordGuessed, setWordGuessed] = useState(false);
   const [user, setUser] = useState(null);
   const [isRegistering, setIsRegistering] = useState(false);
 
   useEffect(() => {
+    const token = Cookies.get("token");
+    if (token) {
+      // Assuming the token contains the user info encoded
+      const userInfo = JSON.parse(atob(token.split(".")[1]));
+      setUser({
+        username: userInfo.username,
+        token,
+        level: userInfo.level,
+        xp: userInfo.xp,
+      });
+    }
+
     const urlParams = new URLSearchParams(window.location.search);
     const roomIdFromUrl = urlParams.get("roomId");
     if (roomIdFromUrl) {
       setPendingRoomId(roomIdFromUrl);
-      setShowUsernameInput(true);
     }
 
     socket.emit("requestWords");
@@ -94,6 +105,18 @@ export default function Game() {
         setWordGuessed(false);
       });
 
+      socket.on("updateUser", (data) => {
+        setUser((prevUser) => ({
+          ...prevUser,
+          level: data.level,
+          xp: data.xp,
+        }));
+      });
+
+      socket.on("setCookie", ({ token }) => {
+        Cookies.set("token", token, { expires: 1 });
+      });
+
       return () => {
         socket.off("init");
         socket.off("update");
@@ -104,6 +127,8 @@ export default function Game() {
         socket.off("roomDestroyed");
         socket.off("wordGuessed");
         socket.off("guessedLetters");
+        socket.off("updateUser");
+        socket.off("setCookie");
       };
     }
   }, [roomId]);
@@ -115,7 +140,6 @@ export default function Game() {
   const createRoom = () => {
     if (!username) {
       setIsCreator(true);
-      setShowUsernameInput(true);
     } else {
       if (customWord.includes(" ")) {
         toast.error("A palavra não pode conter espaços!");
@@ -135,7 +159,6 @@ export default function Game() {
   const joinRoom = () => {
     if (!username) {
       setIsCreator(false);
-      setShowUsernameInput(true);
     } else {
       socket.emit("joinRoom", { roomId, username }, (success) => {
         if (!success) {
@@ -144,49 +167,6 @@ export default function Game() {
         }
       });
     }
-  };
-
-  const handleUsernameSubmit = () => {
-    setShowUsernameInput(false);
-    if (isCreator) {
-      createRoom();
-    } else {
-      socket.emit(
-        "joinRoom",
-        { roomId: pendingRoomId, username },
-        (success) => {
-          if (!success) {
-            alert("Room not found");
-            setPendingRoomId("");
-          } else {
-            setRoomId(pendingRoomId);
-          }
-        }
-      );
-    }
-  };
-
-  const destroyRoom = () => {
-    socket.emit("destroyRoom", { roomId });
-  };
-
-  const copyRoomLink = () => {
-    const roomLink = `${window.location.origin}/?roomId=${roomId}`;
-    navigator.clipboard.writeText(roomLink);
-    toast.success("Link da sala copiado para a área de transferência!");
-  };
-
-  const startNewGame = () => {
-    setWordGuessed(false);
-    setShowConfetti(false);
-    socket.emit(
-      "createRoom",
-      { word: customWord.toUpperCase(), username },
-      (newRoomId) => {
-        setRoomId(newRoomId);
-        setIsCreator(true);
-      }
-    );
   };
 
   const handleLogin = (data) => {
@@ -198,7 +178,7 @@ export default function Game() {
           level: response.level,
           xp: response.xp,
         });
-        setShowUsernameInput(false);
+        Cookies.set("token", response.token, { expires: 1 });
       } else {
         toast.error(response.message);
       }
@@ -218,29 +198,7 @@ export default function Game() {
     });
   };
 
-  if (showUsernameInput) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white">
-        <ToastContainer />
-        <h1 className="text-4xl font-bold mb-8">Jogo da Forca</h1>
-        <input
-          type="text"
-          placeholder="Nome de Usuário"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="border border-gray-400 rounded px-4 py-2 mb-4 text-black bg-white"
-        />
-        <button
-          onClick={handleUsernameSubmit}
-          className="bg-blue-600 hover:bg-blue-700 transition duration-200 text-white rounded px-4 py-2 mb-4"
-        >
-          Confirmar Nome de Usuário
-        </button>
-      </div>
-    );
-  }
-
-  if (!user && !showUsernameInput) {
+  if (!user) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white">
         <ToastContainer />
@@ -260,7 +218,7 @@ export default function Game() {
     );
   }
 
-  if (!roomId && !showUsernameInput) {
+  if (!roomId) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white">
         <ToastContainer />
