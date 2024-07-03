@@ -62,6 +62,8 @@ function chooseRandomWord() {
     "PIRARUCU",
     "TUCUPI",
     "TACACA",
+    "PIROCUDO",
+    "TICUDO",
     "CHIMARRAO",
     "FEIJOADA",
     "PAODEQUEIJO",
@@ -133,24 +135,28 @@ io.on("connection", (socket) => {
     const { roomId, letter, username } = data;
     const gameState = rooms[roomId];
     if (gameState) {
-      if (gameState.word.includes(letter)) {
+      if (!gameState.guessedLetters.includes(letter)) {
         gameState.guessedLetters.push(letter);
-      } else {
-        gameState.incorrectGuesses += 1;
-      }
 
-      io.to(roomId).emit("update", gameState);
-      io.to(roomId).emit(
-        "playerAction",
-        `${username} adivinhou a letra "${letter}"`
-      );
+        if (!gameState.word.includes(letter)) {
+          gameState.incorrectGuesses += 1;
+        }
 
-      if (
-        gameState.word
-          .split("")
-          .every((letter) => gameState.guessedLetters.includes(letter))
-      ) {
-        io.to(roomId).emit("wordGuessed", username);
+        io.to(roomId).emit("update", gameState);
+        io.to(roomId).emit(
+          "playerAction",
+          `${username} adivinhou a letra "${letter}"`
+        );
+
+        io.to(roomId).emit("guessedLetters", gameState.guessedLetters);
+
+        if (
+          gameState.word
+            .split("")
+            .every((letter) => gameState.guessedLetters.includes(letter))
+        ) {
+          io.to(roomId).emit("wordGuessed", username);
+        }
       }
     } else {
       console.error(`gameState is undefined for roomId: ${roomId}`);
