@@ -41,7 +41,7 @@ function saveUsersData() {
 }
 
 function chooseRandomWord() {
-  const words = ["ABACAXI", "ACAI", "BANANA", /* ... other words ... */];
+  const words = ["ABACAXI", "ACAI", "BANANA" /* ... other words ... */];
   return words[Math.floor(Math.random() * words.length)];
 }
 
@@ -93,9 +93,9 @@ io.on("connection", (socket) => {
 
   socket.on("login", async ({ username, password }, callback) => {
     const user = usersData[username];
-    if (user && await bcrypt.compare(password, user.password)) {
+    if (user && (await bcrypt.compare(password, user.password))) {
       const token = jwt.sign({ username }, "secretKey", { expiresIn: "1h" });
-      callback({ success: true, token });
+      callback({ success: true, token, level: user.level, xp: user.xp });
     } else {
       callback({ success: false, message: "Invalid credentials" });
     }
@@ -138,12 +138,19 @@ io.on("connection", (socket) => {
       }
 
       io.to(roomId).emit("update", gameState);
-      io.to(roomId).emit("playerAction", `${username} adivinhou a letra "${letter}"`);
+      io.to(roomId).emit(
+        "playerAction",
+        `${username} adivinhou a letra "${letter}"`
+      );
       io.to(roomId).emit("guessedLetters", gameState.guessedLetters);
 
-      if (gameState.word.split("").every((l) => gameState.guessedLetters.includes(l))) {
+      if (
+        gameState.word
+          .split("")
+          .every((l) => gameState.guessedLetters.includes(l))
+      ) {
         io.to(roomId).emit("wordGuessed", username);
-        addXp(username, 10);  // Add XP when the word is guessed
+        addXp(username, 10); // Add XP when the word is guessed
       }
     } else {
       console.error(`gameState is undefined for roomId: ${roomId}`);
@@ -163,7 +170,9 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnecting", () => {
-    const roomsToUpdate = [...socket.rooms].filter((room) => room !== socket.id);
+    const roomsToUpdate = [...socket.rooms].filter(
+      (room) => room !== socket.id
+    );
     roomsToUpdate.forEach((roomId) => {
       if (rooms[roomId]) {
         delete rooms[roomId].players[socket.id];
