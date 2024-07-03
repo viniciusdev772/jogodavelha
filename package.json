@@ -12,6 +12,8 @@
     "pm2:delete": "pm2 delete ecosystem.config.js"
   },
   "dependencies": {
+    "bcrypt": "^5.1.1",
+    "jsonwebtoken": "^9.0.2",
     "next": "14.2.4",
     "react": "^18",
     "react-confetti": "^6.1.0",

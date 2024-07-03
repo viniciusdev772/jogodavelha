@@ -4,6 +4,9 @@ import Confetti from "react-confetti";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import VirtualKeyboard from "../components/VirtualKeyboard";
+import LoginForm from "../components/LoginForm";
+import RegisterForm from "../components/RegisterForm";
+import Profile from "../components/Profile";
 
 const socket = io("https://jogo.viniciusdev.com.br");
 
@@ -22,6 +25,8 @@ export default function Game() {
   const [showUsernameInput, setShowUsernameInput] = useState(false);
   const [pendingRoomId, setPendingRoomId] = useState("");
   const [wordGuessed, setWordGuessed] = useState(false);
+  const [user, setUser] = useState(null);
+  const [isRegistering, setIsRegistering] = useState(false);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -184,6 +189,30 @@ export default function Game() {
     );
   };
 
+  const handleLogin = (data) => {
+    socket.emit("login", data, (response) => {
+      if (response.success) {
+        setUser({ username: data.username, token: response.token });
+        setShowUsernameInput(false);
+      } else {
+        toast.error(response.message);
+      }
+    });
+  };
+
+  const handleRegister = (data) => {
+    socket.emit("register", data, (response) => {
+      if (response.success) {
+        toast.success(
+          "Cadastro realizado com sucesso! Faça login para continuar."
+        );
+        setIsRegistering(false);
+      } else {
+        toast.error(response.message);
+      }
+    });
+  };
+
   if (showUsernameInput) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white">
@@ -206,11 +235,32 @@ export default function Game() {
     );
   }
 
+  if (!user && !showUsernameInput) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white">
+        <ToastContainer />
+        <h1 className="text-4xl font-bold mb-8">Jogo da Forca</h1>
+        {isRegistering ? (
+          <RegisterForm onRegister={handleRegister} />
+        ) : (
+          <LoginForm onLogin={handleLogin} />
+        )}
+        <button
+          onClick={() => setIsRegistering(!isRegistering)}
+          className="bg-blue-600 hover:bg-blue-700 transition duration-200 text-white rounded px-4 py-2 mt-4"
+        >
+          {isRegistering ? "Já tenho uma conta" : "Criar uma conta"}
+        </button>
+      </div>
+    );
+  }
+
   if (!roomId && !showUsernameInput) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white">
         <ToastContainer />
         <h1 className="text-4xl font-bold mb-8">Jogo da Forca</h1>
+        <Profile user={user} />
         <div className="mb-4">Total de Jogadores: {totalPlayers}</div>
         <input
           type="text"
@@ -255,6 +305,7 @@ export default function Game() {
       <ToastContainer />
       {showConfetti && <Confetti />}
       <h1 className="text-4xl font-bold mb-8">Jogo da Forca</h1>
+      <Profile user={user} />
       <div className="text-2xl mb-4">
         Palavra: <span className="font-mono">{displayWord}</span>
       </div>
