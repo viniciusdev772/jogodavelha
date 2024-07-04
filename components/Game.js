@@ -9,7 +9,9 @@ import LoginForm from "../components/LoginForm";
 import RegisterForm from "../components/RegisterForm";
 import Profile from "../components/Profile";
 
-const socket = io("https://jogo.viniciusdev.com.br");
+const socket = io("https://jogo.viniciusdev.com.br", {
+  transports: ["websocket"],
+});
 
 export default function Game() {
   const [gameState, setGameState] = useState(null);
@@ -65,6 +67,15 @@ export default function Game() {
       setJafoi(letters);
     });
 
+    return () => {
+      socket.off("wordsData");
+      socket.off("totalPlayers");
+      socket.off("wordGuessed");
+      socket.off("guessedLetters");
+    };
+  }, []);
+
+  useEffect(() => {
     if (roomId) {
       socket.emit(
         "joinRoom",
@@ -115,22 +126,13 @@ export default function Game() {
         }));
       });
 
-      socket.on("setCookie", ({ token }) => {
-        Cookies.set("token", token, { expires: 1 });
-      });
-
       return () => {
         socket.off("init");
         socket.off("update");
         socket.off("playerCount");
         socket.off("playerAction");
-        socket.off("wordsData");
-        socket.off("totalPlayers");
         socket.off("roomDestroyed");
-        socket.off("wordGuessed");
-        socket.off("guessedLetters");
         socket.off("updateUser");
-        socket.off("setCookie");
       };
     }
   }, [roomId, user]);
@@ -276,7 +278,7 @@ export default function Game() {
       <ToastContainer />
       {showConfetti && <Confetti />}
       <h1 className="text-4xl font-bold mb-8">Jogo da Forca</h1>
-
+      
       <div className="text-2xl mb-4">
         Palavra: <span className="font-mono">{displayWord}</span>
       </div>
