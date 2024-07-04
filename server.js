@@ -5,19 +5,16 @@ const fs = require("fs");
 const path = require("path");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const cookieParser = require("cookie-parser");
-const express = require("express");
 
 const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
-const server = express();
-server.use(cookieParser());
+const server = createServer((req, res) => {
+  handle(req, res);
+});
 
-const httpServer = createServer(server);
-
-const io = socketIo(httpServer);
+const io = socketIo(server);
 
 const dbFilePath = path.join(__dirname, "data.json");
 const usersFilePath = path.join(__dirname, "users.json");
@@ -189,12 +186,8 @@ io.on("connection", (socket) => {
   });
 });
 
-server.all('*', (req, res) => {
-  return handle(req, res);
-});
-
 app.prepare().then(() => {
-  httpServer.listen(9000, (err) => {
+  server.listen(9000, (err) => {
     if (err) throw err;
     console.log("> Ready on http://localhost:9000");
   });
