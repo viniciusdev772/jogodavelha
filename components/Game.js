@@ -18,7 +18,6 @@ export default function Game() {
   const [roomId, setRoomId] = useState("");
   const [showConfetti, setShowConfetti] = useState(false);
   const [customWord, setCustomWord] = useState("");
-  const [username, setUsername] = useState("");
   const [jafoi, setJafoi] = useState([]);
   const [isCreator, setIsCreator] = useState(false);
   const [totalPlayers, setTotalPlayers] = useState(0);
@@ -31,7 +30,6 @@ export default function Game() {
   useEffect(() => {
     const token = Cookies.get('token');
     if (token) {
-      // Assuming the token contains the user info encoded
       const userInfo = JSON.parse(atob(token.split('.')[1]));
       setUser({ 
         username: userInfo.username, 
@@ -293,13 +291,28 @@ export default function Game() {
             Destruir Sala
           </button>
           <button
-            onClick={copyRoomLink}
+            onClick={() => {
+              const roomLink = `${window.location.origin}/?roomId=${roomId}`;
+              navigator.clipboard.writeText(roomLink);
+              toast.success("Link da sala copiado para a área de transferência!");
+            }}
             className="bg-blue-600 hover:bg-blue-700 transition duration-200 text-white rounded px-4 py-2 mb-4"
           >
             Copiar Link da Sala
           </button>
           <button
-            onClick={startNewGame}
+            onClick={() => {
+              setWordGuessed(false);
+              setShowConfetti(false);
+              socket.emit(
+                "createRoom",
+                { word: customWord.toUpperCase(), username: user.username },
+                (newRoomId) => {
+                  setRoomId(newRoomId);
+                  setIsCreator(true);
+                }
+              );
+            }}
             className="bg-green-600 hover:bg-green-700 transition duration-200 text-white rounded px-4 py-2"
           >
             Iniciar Novo Jogo
