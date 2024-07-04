@@ -287,7 +287,7 @@ export default function Game() {
       {isCreator && (
         <div className="flex flex-col items-center mt-4">
           <button
-            onClick={destroyRoom}
+            onClick={() => socket.emit("destroyRoom", { roomId })}
             className="bg-red-600 hover:bg-red-700 transition duration-200 text-white rounded px-4 py-2 mb-4"
           >
             Destruir Sala
