@@ -29,15 +29,15 @@ export default function Game() {
   const [isRegistering, setIsRegistering] = useState(false);
 
   useEffect(() => {
-    const token = Cookies.get("token");
+    const token = Cookies.get('token');
     if (token) {
       // Assuming the token contains the user info encoded
-      const userInfo = JSON.parse(atob(token.split(".")[1]));
-      setUser({
-        username: userInfo.username,
-        token,
-        level: userInfo.level,
-        xp: userInfo.xp,
+      const userInfo = JSON.parse(atob(token.split('.')[1]));
+      setUser({ 
+        username: userInfo.username, 
+        token, 
+        level: userInfo.level, 
+        xp: userInfo.xp 
       });
     }
 
@@ -68,10 +68,10 @@ export default function Game() {
     });
 
     if (roomId) {
-      socket.emit("joinRoom", { roomId, username }, (success) => {
+      socket.emit("joinRoom", { roomId, username: user.username }, (success) => {
         if (!success) {
           alert(
-            "a sala não foi encontrada. caso tenha certeza que ela existe recarregar a página e tentar novamente"
+            "A sala não foi encontrada. Caso tenha certeza que ela existe, recarregue a página e tente novamente."
           );
           setRoomId("");
         }
@@ -113,8 +113,8 @@ export default function Game() {
         }));
       });
 
-      socket.on("setCookie", ({ token }) => {
-        Cookies.set("token", token, { expires: 1 });
+      socket.on('setCookie', ({ token }) => {
+        Cookies.set('token', token, { expires: 1 });
       });
 
       return () => {
@@ -131,42 +131,44 @@ export default function Game() {
         socket.off("setCookie");
       };
     }
-  }, [roomId]);
+  }, [roomId, user]);
 
   const handleGuess = (letter) => {
-    socket.emit("guess", { roomId, letter, username });
+    socket.emit("guess", { roomId, letter, username: user.username });
   };
 
   const createRoom = () => {
-    if (!username) {
-      setIsCreator(true);
-    } else {
-      if (customWord.includes(" ")) {
-        toast.error("A palavra não pode conter espaços!");
-        return;
-      }
-      socket.emit(
-        "createRoom",
-        { word: customWord.toUpperCase(), username },
-        (newRoomId) => {
-          setRoomId(newRoomId);
-          setIsCreator(true);
-        }
-      );
+    if (!user.username) {
+      toast.error("Você precisa estar logado para criar uma sala!");
+      return;
     }
+    if (customWord.includes(" ")) {
+      toast.error("A palavra não pode conter espaços!");
+      return;
+    }
+    socket.emit(
+      "createRoom",
+      { word: customWord.toUpperCase(), username: user.username },
+      (newRoomId) => {
+        setRoomId(newRoomId);
+        setIsCreator(true);
+      }
+    );
   };
 
   const joinRoom = () => {
-    if (!username) {
-      setIsCreator(false);
-    } else {
-      socket.emit("joinRoom", { roomId, username }, (success) => {
-        if (!success) {
-          alert("Room not found");
-          setRoomId("");
-        }
-      });
+    if (!user.username) {
+      toast.error("Você precisa estar logado para entrar em uma sala!");
+      return;
     }
+    socket.emit("joinRoom", { roomId: pendingRoomId, username: user.username }, (success) => {
+      if (!success) {
+        alert("Sala não encontrada");
+        setPendingRoomId("");
+      } else {
+        setRoomId(pendingRoomId);
+      }
+    });
   };
 
   const handleLogin = (data) => {
@@ -178,7 +180,7 @@ export default function Game() {
           level: response.level,
           xp: response.xp,
         });
-        Cookies.set("token", response.token, { expires: 1 });
+        Cookies.set('token', response.token, { expires: 1 });
       } else {
         toast.error(response.message);
       }
