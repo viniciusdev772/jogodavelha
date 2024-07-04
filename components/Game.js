@@ -28,14 +28,14 @@ export default function Game() {
   const [isRegistering, setIsRegistering] = useState(false);
 
   useEffect(() => {
-    const token = Cookies.get('token');
+    const token = Cookies.get("token");
     if (token) {
-      const userInfo = JSON.parse(atob(token.split('.')[1]));
-      setUser({ 
-        username: userInfo.username, 
-        token, 
-        level: userInfo.level, 
-        xp: userInfo.xp 
+      const userInfo = JSON.parse(atob(token.split(".")[1]));
+      setUser({
+        username: userInfo.username,
+        token,
+        level: userInfo.level,
+        xp: userInfo.xp,
       });
     }
 
@@ -66,14 +66,18 @@ export default function Game() {
     });
 
     if (roomId) {
-      socket.emit("joinRoom", { roomId, username: user.username }, (success) => {
-        if (!success) {
-          alert(
-            "A sala não foi encontrada. Caso tenha certeza que ela existe, recarregue a página e tente novamente."
-          );
-          setRoomId("");
+      socket.emit(
+        "joinRoom",
+        { roomId, username: user.username },
+        (success) => {
+          if (!success) {
+            alert(
+              "A sala não foi encontrada. Caso tenha certeza que ela existe, recarregue a página e tente novamente."
+            );
+            setRoomId("");
+          }
         }
-      });
+      );
 
       socket.on("init", (state) => {
         setGameState(state);
@@ -111,8 +115,8 @@ export default function Game() {
         }));
       });
 
-      socket.on('setCookie', ({ token }) => {
-        Cookies.set('token', token, { expires: 1 });
+      socket.on("setCookie", ({ token }) => {
+        Cookies.set("token", token, { expires: 1 });
       });
 
       return () => {
@@ -159,14 +163,18 @@ export default function Game() {
       toast.error("Você precisa estar logado para entrar em uma sala!");
       return;
     }
-    socket.emit("joinRoom", { roomId: pendingRoomId, username: user.username }, (success) => {
-      if (!success) {
-        alert("Sala não encontrada");
-        setPendingRoomId("");
-      } else {
-        setRoomId(pendingRoomId);
+    socket.emit(
+      "joinRoom",
+      { roomId: pendingRoomId, username: user.username },
+      (success) => {
+        if (!success) {
+          alert("Sala não encontrada");
+          setPendingRoomId("");
+        } else {
+          setRoomId(pendingRoomId);
+        }
       }
-    });
+    );
   };
 
   const handleLogin = (data) => {
@@ -178,7 +186,7 @@ export default function Game() {
           level: response.level,
           xp: response.xp,
         });
-        Cookies.set('token', response.token, { expires: 1 });
+        Cookies.set("token", response.token, { expires: 1 });
       } else {
         toast.error(response.message);
       }
@@ -294,7 +302,9 @@ export default function Game() {
             onClick={() => {
               const roomLink = `${window.location.origin}/?roomId=${roomId}`;
               navigator.clipboard.writeText(roomLink);
-              toast.success("Link da sala copiado para a área de transferência!");
+              toast.success(
+                "Link da sala copiado para a área de transferência!"
+              );
             }}
             className="bg-blue-600 hover:bg-blue-700 transition duration-200 text-white rounded px-4 py-2 mb-4"
           >
