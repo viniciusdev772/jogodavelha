@@ -30,32 +30,41 @@ export default function Users() {
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white">
       <ToastContainer />
       <h1 className="text-4xl font-bold mb-8">Usuários</h1>
-      <table className="table-auto bg-white text-black rounded shadow-lg">
-        <thead>
-          <tr>
-            <th className="px-4 py-2">Usuário</th>
-            <th className="px-4 py-2">Nível</th>
-            <th className="px-4 py-2">XP</th>
-            <th className="px-4 py-2">Progresso</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((user) => (
-            <tr key={user.username}>
-              <td className="border px-4 py-2">{user.username}</td>
-              <td className="border px-4 py-2">{user.level}</td>
-              <td className="border px-4 py-2">{user.xp}</td>
-              <td className="border px-4 py-2">
-                <ProgressBar
-                  completed={(user.xp / (user.level * 10)) * 100}
-                  labelColor="#000000"
-                  bgColor="#6a1b9a"
-                />
-              </td>
+      <div className="overflow-x-auto">
+        <table className="min-w-full bg-white text-black rounded-lg shadow-lg">
+          <thead>
+            <tr>
+              <th className="px-4 py-2 border-b">Usuário</th>
+              <th className="px-4 py-2 border-b">Nível</th>
+              <th className="px-4 py-2 border-b">XP</th>
+              <th className="px-4 py-2 border-b">Progresso</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {users.map((user) => (
+              <tr
+                key={user.username}
+                className="hover:bg-gray-200 transition-colors"
+              >
+                <td className="px-4 py-2 border-b text-center">
+                  {user.username}
+                </td>
+                <td className="px-4 py-2 border-b text-center">{user.level}</td>
+                <td className="px-4 py-2 border-b text-center">{user.xp}</td>
+                <td className="px-4 py-2 border-b text-center">
+                  <ProgressBar
+                    completed={(user.xp / (user.level * 10)) * 100}
+                    labelColor="#000000"
+                    bgColor="#6a1b9a"
+                    height="20px"
+                    className="rounded-full"
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
