@@ -276,7 +276,7 @@ export default function Game() {
       <ToastContainer />
       {showConfetti && <Confetti />}
       <h1 className="text-4xl font-bold mb-8">Jogo da Forca</h1>
-      <Profile username={user.username} />
+
       <div className="text-2xl mb-4">
         Palavra: <span className="font-mono">{displayWord}</span>
       </div>
