@@ -93,7 +93,7 @@ function addXp(username, xp) {
 io.on("connection", (socket) => {
   socket.on("register", async ({ username, password }, callback) => {
     if (usersData[username]) {
-      callback({ success: false, message: "Username already exists" });
+      callback({ success: false, message: "Este nome de usuário já está em uso. deve ser único " });
     } else {
       const hashedPassword = await bcrypt.hash(password, 10);
       usersData[username] = { password: hashedPassword, level: 1, xp: 0 };
@@ -109,7 +109,7 @@ io.on("connection", (socket) => {
       socket.emit('setCookie', { token });
       callback({ success: true, token, level: user.level, xp: user.xp });
     } else {
-      callback({ success: false, message: "Invalid credentials" });
+      callback({ success: false, message: "Credenciais inválidas de login" });
     }
   });
 
