@@ -231,7 +231,7 @@ export default function Game() {
       <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white">
         <ToastContainer />
         <h1 className="text-4xl font-bold mb-8">Jogo da Forca</h1>
-        <Profile user={user} />
+        <Profile username={user.username} />
         <div className="mb-4">Total de Jogadores: {totalPlayers}</div>
         <input
           type="text"
@@ -276,7 +276,7 @@ export default function Game() {
       <ToastContainer />
       {showConfetti && <Confetti />}
       <h1 className="text-4xl font-bold mb-8">Jogo da Forca</h1>
-      <Profile user={user} />
+      <Profile username={user.username} />
       <div className="text-2xl mb-4">
         Palavra: <span className="font-mono">{displayWord}</span>
       </div>

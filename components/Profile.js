@@ -1,16 +1,32 @@
+import React, { useEffect, useState } from "react";
 import ProgressBar from "@ramonak/react-progress-bar";
 
-export default function Profile({ user }) {
-  if (!user) return null;
+const Profile = ({ username }) => {
+  const [userData, setUserData] = useState(null);
 
-  const xp = user.xp || 0;
-  const level = user.level || 1;
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const response = await fetch(`/api/user?username=${username}`);
+      const data = await response.json();
+      if (response.ok) {
+        setUserData(data);
+      } else {
+        console.error(data.error);
+      }
+    };
+
+    fetchUserData();
+  }, [username]);
+
+  if (!userData) return <div>Loading...</div>;
+
+  const { level, xp } = userData;
   const xpPercentage = ((xp / (level * 10)) * 100).toFixed(2);
 
   return (
     <div className="text-center mb-4">
       <h2 className="text-2xl font-bold">Perfil</h2>
-      <p>Usuário: {user.username}</p>
+      <p>Usuário: {username}</p>
       <p>Nível: {level}</p>
       <div className="mb-2">XP:</div>
       <ProgressBar completed={xpPercentage} />
@@ -19,4 +35,6 @@ export default function Profile({ user }) {
       </p>
     </div>
   );
-}
+};
+
+export default Profile;
