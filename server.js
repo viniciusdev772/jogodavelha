@@ -41,7 +41,18 @@ function saveUsersData() {
 }
 
 function chooseRandomWord() {
-  const words = ["ABACAXI", "ACAI", "BANANA", /* ... other words ... */];
+  const words = [
+    "ABACAXI", "ACAI", "BANANA", 
+    "CARAMBOLA", "DAMASCO", "FIGO", "GOIABA", "JABUTICABA", "KIWI", 
+    "LARANJA", "MANGA", "NECTARINA", "PAPAYA", "QUINCE", "ROMA", 
+    "SAPOTI", "TAMARINDO", "UVA", "XIXA", "JACA", "LIMAO", 
+    "MARACUJA", "MELANCIA", "MELAO", "MORANGO", "PEQUI", "PITANGA", 
+    "SERIGUELA", "TANGERINA", "TORANJA", "UMBU", "CAMBUCA", 
+    "GRAVIOLA", "GUARANA", "MANGABA", "MURICI", "PITAYA", "CACAU", 
+    "CACI", "CUPUACU", "BURITI", "ACEROLA", "ARACA", "ARATICUM", 
+    "CAJU", "CAQUI", "CASTANHA", "IMBU", "JENIPAPO", "PEPINO",
+    "AMEIXA", "ALFARROBA", "TOMATE"
+];
   return words[Math.floor(Math.random() * words.length)];
 }
 
