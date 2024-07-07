@@ -4,6 +4,7 @@ import Confetti from "react-confetti";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Cookies from "js-cookie";
+import { motion } from "framer-motion";
 import VirtualKeyboard from "../components/VirtualKeyboard";
 import LoginForm from "../components/LoginForm";
 import RegisterForm from "../components/RegisterForm";
@@ -12,6 +13,27 @@ import Profile from "../components/Profile";
 const socket = io("https://jogo.viniciusdev.com.br", {
   transports: ["websocket"],
 });
+
+const pageVariants = {
+  initial: {
+    opacity: 0,
+    y: -20,
+  },
+  in: {
+    opacity: 1,
+    y: 0,
+  },
+  out: {
+    opacity: 0,
+    y: 20,
+  },
+};
+
+const pageTransition = {
+  type: "tween",
+  ease: "anticipate",
+  duration: 0.5,
+};
 
 export default function Game() {
   const [gameState, setGameState] = useState(null);
@@ -210,7 +232,14 @@ export default function Game() {
 
   if (!user) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white">
+      <motion.div
+        className="flex flex-col items-center justify-center h-screen bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white"
+        initial="initial"
+        animate="in"
+        exit="out"
+        variants={pageVariants}
+        transition={pageTransition}
+      >
         <ToastContainer />
         <h1 className="text-4xl font-bold mb-8">Jogo da Forca</h1>
         {isRegistering ? (
@@ -224,13 +253,20 @@ export default function Game() {
         >
           {isRegistering ? "Já tenho uma conta" : "Criar uma conta"}
         </button>
-      </div>
+      </motion.div>
     );
   }
 
   if (!roomId) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white">
+      <motion.div
+        className="flex flex-col items-center justify-center h-screen bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white"
+        initial="initial"
+        animate="in"
+        exit="out"
+        variants={pageVariants}
+        transition={pageTransition}
+      >
         <ToastContainer />
         <h1 className="text-4xl font-bold mb-8">Jogo da Forca</h1>
         <Profile username={user.username} />
@@ -261,7 +297,7 @@ export default function Game() {
         >
           Criar Sala
         </button>
-      </div>
+      </motion.div>
     );
   }
 
@@ -274,11 +310,18 @@ export default function Game() {
     .join(" ");
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white">
+    <motion.div
+      className="flex flex-col items-center justify-center h-screen bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white"
+      initial="initial"
+      animate="in"
+      exit="out"
+      variants={pageVariants}
+      transition={pageTransition}
+    >
       <ToastContainer />
       {showConfetti && <Confetti />}
       <h1 className="text-4xl font-bold mb-8">Jogo da Forca</h1>
-      
+
       <div className="text-2xl mb-4">
         Palavra: <span className="font-mono">{displayWord}</span>
       </div>
@@ -331,6 +374,6 @@ export default function Game() {
           </button>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
