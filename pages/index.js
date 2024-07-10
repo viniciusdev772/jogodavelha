@@ -5,7 +5,6 @@ export default function Home() {
   return (
     <div>
       <Game />
-      <TicTacToe />
     </div>
   );
 }
