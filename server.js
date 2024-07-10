@@ -108,14 +108,6 @@ function initializeGame(word) {
   };
 }
 
-function initializeTicTacToeGame() {
-  return {
-    board: Array(9).fill(null),
-    isXNext: true,
-    players: {},
-  };
-}
-
 function updateTotalPlayers() {
   const totalPlayers = Object.values(rooms).reduce(
     (sum, room) => sum + Object.keys(room.players).length,
@@ -168,13 +160,9 @@ io.on("connection", (socket) => {
   });
 
   socket.on("createRoom", (data, callback) => {
-    const { word, username, gameType } = data;
+    const { word, username } = data;
     const roomId = Math.random().toString(36).substr(2, 9);
-    if (gameType === "hangman") {
-      rooms[roomId] = initializeGame(word);
-    } else if (gameType === "tictactoe") {
-      rooms[roomId] = initializeTicTacToeGame();
-    }
+    rooms[roomId] = initializeGame(word);
     rooms[roomId].players[socket.id] = username;
     socket.join(roomId);
     if (typeof callback === "function") callback(roomId);
@@ -214,13 +202,14 @@ io.on("connection", (socket) => {
       );
       io.to(roomId).emit("guessedLetters", gameState.guessedLetters);
 
+      // Verifica se todas as letras foram adivinhadas
       if (
         gameState.word
           .split("")
           .every((l) => gameState.guessedLetters.includes(l))
       ) {
         io.to(roomId).emit("wordGuessed", username);
-        addXp(username, 10);
+        addXp(username, 10); // Aumenta o XP quando a palavra é adivinhada
         const updatedUser = usersData[username];
         io.to(socket.id).emit("updateUser", {
           level: updatedUser.level,
@@ -229,21 +218,6 @@ io.on("connection", (socket) => {
       }
     } else {
       console.error(`gameState is undefined for roomId: ${roomId}`);
-    }
-  });
-
-  socket.on("playerMove", ({ board, isXNext, roomId }) => {
-    if (rooms[roomId]) {
-      rooms[roomId].board = board;
-      rooms[roomId].isXNext = isXNext;
-      io.to(roomId).emit("playerMove", { board, isXNext });
-    }
-  });
-
-  socket.on("gameOver", ({ winner, roomId }) => {
-    if (rooms[roomId]) {
-      io.to(roomId).emit("gameOver", winner);
-      delete rooms[roomId];
     }
   });
 
