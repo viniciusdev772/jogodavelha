@@ -42,17 +42,60 @@ function saveUsersData() {
 
 function chooseRandomWord() {
   const words = [
-    "ABACAXI", "ACAI", "BANANA", 
-    "CARAMBOLA", "DAMASCO", "FIGO", "GOIABA", "JABUTICABA", "KIWI", 
-    "LARANJA", "MANGA", "NECTARINA", "PAPAYA", "QUINCE", "ROMA", 
-    "SAPOTI", "TAMARINDO", "UVA", "XIXA", "JACA", "LIMAO", 
-    "MARACUJA", "MELANCIA", "MELAO", "MORANGO", "PEQUI", "PITANGA", 
-    "SERIGUELA", "TANGERINA", "TORANJA", "UMBU", "CAMBUCA", 
-    "GRAVIOLA", "GUARANA", "MANGABA", "MURICI", "PITAYA", "CACAU", 
-    "CACI", "CUPUACU", "BURITI", "ACEROLA", "ARACA", "ARATICUM", 
-    "CAJU", "CAQUI", "CASTANHA", "IMBU", "JENIPAPO", "PEPINO",
-    "AMEIXA", "ALFARROBA", "TOMATE"
-];
+    "ABACAXI",
+    "ACAI",
+    "BANANA",
+    "CARAMBOLA",
+    "DAMASCO",
+    "FIGO",
+    "GOIABA",
+    "JABUTICABA",
+    "KIWI",
+    "LARANJA",
+    "MANGA",
+    "NECTARINA",
+    "PAPAYA",
+    "QUINCE",
+    "ROMA",
+    "SAPOTI",
+    "TAMARINDO",
+    "UVA",
+    "XIXA",
+    "JACA",
+    "LIMAO",
+    "MARACUJA",
+    "MELANCIA",
+    "MELAO",
+    "MORANGO",
+    "PEQUI",
+    "PITANGA",
+    "SERIGUELA",
+    "TANGERINA",
+    "TORANJA",
+    "UMBU",
+    "CAMBUCA",
+    "GRAVIOLA",
+    "GUARANA",
+    "MANGABA",
+    "MURICI",
+    "PITAYA",
+    "CACAU",
+    "CACI",
+    "CUPUACU",
+    "BURITI",
+    "ACEROLA",
+    "ARACA",
+    "ARATICUM",
+    "CAJU",
+    "CAQUI",
+    "CASTANHA",
+    "IMBU",
+    "JENIPAPO",
+    "PEPINO",
+    "AMEIXA",
+    "ALFARROBA",
+    "TOMATE",
+  ];
   return words[Math.floor(Math.random() * words.length)];
 }
 
@@ -61,6 +104,14 @@ function initializeGame(word) {
     word: word || chooseRandomWord(),
     guessedLetters: [],
     incorrectGuesses: 0,
+    players: {},
+  };
+}
+
+function initializeTicTacToeGame() {
+  return {
+    board: Array(9).fill(null),
+    isXNext: true,
     players: {},
   };
 }
@@ -93,7 +144,10 @@ function addXp(username, xp) {
 io.on("connection", (socket) => {
   socket.on("register", async ({ username, password }, callback) => {
     if (usersData[username]) {
-      callback({ success: false, message: "Este nome de usuário já está em uso. deve ser único " });
+      callback({
+        success: false,
+        message: "Este nome de usuário já está em uso. deve ser único ",
+      });
     } else {
       const hashedPassword = await bcrypt.hash(password, 10);
       usersData[username] = { password: hashedPassword, level: 1, xp: 0 };
@@ -104,9 +158,9 @@ io.on("connection", (socket) => {
 
   socket.on("login", async ({ username, password }, callback) => {
     const user = usersData[username];
-    if (user && await bcrypt.compare(password, user.password)) {
+    if (user && (await bcrypt.compare(password, user.password))) {
       const token = jwt.sign({ username }, "secretKey", { expiresIn: "1h" });
-      socket.emit('setCookie', { token });
+      socket.emit("setCookie", { token });
       callback({ success: true, token, level: user.level, xp: user.xp });
     } else {
       callback({ success: false, message: "Credenciais inválidas de login" });
@@ -114,9 +168,13 @@ io.on("connection", (socket) => {
   });
 
   socket.on("createRoom", (data, callback) => {
-    const { word, username } = data;
+    const { word, username, gameType } = data;
     const roomId = Math.random().toString(36).substr(2, 9);
-    rooms[roomId] = initializeGame(word);
+    if (gameType === "hangman") {
+      rooms[roomId] = initializeGame(word);
+    } else if (gameType === "tictactoe") {
+      rooms[roomId] = initializeTicTacToeGame();
+    }
     rooms[roomId].players[socket.id] = username;
     socket.join(roomId);
     if (typeof callback === "function") callback(roomId);
@@ -150,18 +208,42 @@ io.on("connection", (socket) => {
       }
 
       io.to(roomId).emit("update", gameState);
-      io.to(roomId).emit("playerAction", `${username} adivinhou a letra "${letter}"`);
+      io.to(roomId).emit(
+        "playerAction",
+        `${username} adivinhou a letra "${letter}"`
+      );
       io.to(roomId).emit("guessedLetters", gameState.guessedLetters);
 
-      // Verifica se todas as letras foram adivinhadas
-      if (gameState.word.split("").every((l) => gameState.guessedLetters.includes(l))) {
+      if (
+        gameState.word
+          .split("")
+          .every((l) => gameState.guessedLetters.includes(l))
+      ) {
         io.to(roomId).emit("wordGuessed", username);
-        addXp(username, 10);  // Aumenta o XP quando a palavra é adivinhada
+        addXp(username, 10);
         const updatedUser = usersData[username];
-        io.to(socket.id).emit("updateUser", { level: updatedUser.level, xp: updatedUser.xp });
+        io.to(socket.id).emit("updateUser", {
+          level: updatedUser.level,
+          xp: updatedUser.xp,
+        });
       }
     } else {
       console.error(`gameState is undefined for roomId: ${roomId}`);
+    }
+  });
+
+  socket.on("playerMove", ({ board, isXNext, roomId }) => {
+    if (rooms[roomId]) {
+      rooms[roomId].board = board;
+      rooms[roomId].isXNext = isXNext;
+      io.to(roomId).emit("playerMove", { board, isXNext });
+    }
+  });
+
+  socket.on("gameOver", ({ winner, roomId }) => {
+    if (rooms[roomId]) {
+      io.to(roomId).emit("gameOver", winner);
+      delete rooms[roomId];
     }
   });
 
@@ -178,7 +260,9 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnecting", () => {
-    const roomsToUpdate = [...socket.rooms].filter((room) => room !== socket.id);
+    const roomsToUpdate = [...socket.rooms].filter(
+      (room) => room !== socket.id
+    );
     roomsToUpdate.forEach((roomId) => {
       if (rooms[roomId]) {
         delete rooms[roomId].players[socket.id];
