@@ -24,7 +24,7 @@ jobs:
           eval "$(ssh-agent -s)"
           echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
           ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "
-            export PATH=$PATH:/root/.nvm/versions/node/v22.3.0/bin &&
+            export PATH=$PATH:/root/.nvm/versions/node/v22.4.1/bin &&
             if [ ! -d $PROJECT_PATH ]; then
               git clone $REPO_URL $PROJECT_PATH
             fi &&
