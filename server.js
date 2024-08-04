@@ -16,8 +16,9 @@ const server = createServer((req, res) => {
 
 const io = socketIo(server);
 
-const dbFilePath = path.join(__dirname, "data.json");
-const usersFilePath = path.join(__dirname, "users.json");
+const usersFilePath = path.join(process.cwd(), "users.json");
+const dbFilePath = path.join(process.cwd(), "data.json");
+
 
 let rooms = {};
 let wordsData = { words: [], wins: {} };
